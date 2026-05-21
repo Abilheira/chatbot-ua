@@ -16,7 +16,6 @@ export default function App() {
   ]);
 
   const [loading, setLoading] = useState(false);
-  const [darkMode, setDarkMode] = useState(true);
 
   const endRef = useRef<HTMLDivElement | null>(null);
 
@@ -56,262 +55,88 @@ export default function App() {
     setLoading(false);
   }
 
-  const theme = darkMode ? darkStyles : lightStyles;
-
   return (
-    <div style={theme.page}>
-      <div style={theme.container}>
-        {/* HEADER */}
-        <div style={theme.header}>
-          🎓 UA Assistente
+  <div className="app">
 
-          <button
-            onClick={() => setDarkMode(!darkMode)}
-            style={theme.toggle}
+    {/* HEADER */}
+    <header className="header">
+      <button className="logo-btn">
+        <img src="/logobranco.png" className="chatbot-image2" />
+      </button>
+    </header>
+
+    {/* MAIN */}
+    <main className="main">
+
+      {/* WELCOME */}
+      <div className="welcome">
+        <img src="/chatbot2.png" className="chatbot-image" />
+
+        <h2>
+          Olá! Tira as tuas<br />
+          dúvidas comigo :)
+        </h2>
+      </div>
+
+      {/* CHAT (mantém o teu chat aqui se quiseres) */}
+      <div className="chat-box">
+        {chat.map((msg, i) => (
+          <div
+            key={i}
+            style={{
+              display: "flex",
+              justifyContent: msg.role === "user" ? "flex-end" : "flex-start",
+              marginBottom: 10
+            }}
           >
-            {darkMode ? "☀️" : "🌙"}
-          </button>
-        </div>
-
-        {/* CHAT */}
-        <div style={theme.chat}>
-          {chat.map((msg, i) => (
             <div
-              key={i}
               style={{
-                display: "flex",
-                justifyContent:
-                  msg.role === "user" ? "flex-end" : "flex-start",
+                padding: "10px 14px",
+                borderRadius: 14,
+                maxWidth: "70%",
+                backgroundColor:
+                  msg.role === "user" ? "#006341" : "#eaeaea",
+                color: msg.role === "user" ? "white" : "#000",
               }}
             >
-              <div
-                style={{
-                  ...theme.msg,
-                  backgroundColor:
-                    msg.role === "user"
-                      ? "#006341"
-                      : darkMode
-                      ? "#2a2a2a"
-                      : "#F2F2F2",
-                  color: msg.role === "user" ? "white" : theme.text,
-                }}
-              >
-                {msg.text}
-              </div>
+              {msg.text}
             </div>
-          ))}
+          </div>
+        ))}
 
-          {loading && <div style={theme.loading}>A pensar...</div>}
-          <div ref={endRef} />
-        </div>
+        {loading && <p>A pensar...</p>}
+        <div ref={endRef} />
+      </div>
 
-        {/* INPUT */}
-        <div style={theme.inputBox}>
+      {/* INPUT */}
+      <div className="area-input">
+        <div className="input-box">
+
           <input
-            style={theme.input}
+            id="mensagem"
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-            placeholder="Pergunta sobre a Universidade de Aveiro..."
+            placeholder="Pergunta alguma coisa..."
           />
 
-          <button style={theme.button} onClick={sendMessage}>
-            Enviar
+          <button className="botao4" onClick={sendMessage}>
+            ➜
           </button>
+
         </div>
       </div>
-    </div>
-  );
+
+      {/* DISCLAIMER */}
+      <p className="texto_alerta">
+        Este chatbot foi desenvolvido no âmbito de um Projeto Final de Licenciatura e encontra-se em fase experimental.
+      </p>
+
+      <p className="texto_alerta2">
+        As informações fornecidas não representam posições oficiais da Universidade de Aveiro.
+      </p>
+
+    </main>
+  </div>
+);
 }
-
-/* ================= THEMES ================= */
-
-const darkStyles: any = {
-  page: {
-    height: "100vh",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    background: "#0f0f0f",
-    fontFamily: "Arial",
-  },
-
-  container: {
-    width: "90%",
-    maxWidth: 700,
-    height: "80vh",
-    backgroundColor: "#1a1a1a",
-    borderRadius: 18,
-    display: "flex",
-    flexDirection: "column",
-    overflow: "hidden",
-  },
-
-  header: {
-    padding: 15,
-    backgroundColor: "#006341",
-    color: "white",
-    fontSize: 18,
-    fontWeight: "bold",
-    textAlign: "center",
-    position: "relative",
-  },
-
-  toggle: {
-    position: "absolute",
-    right: 15,
-    top: 10,
-    background: "transparent",
-    border: "none",
-    fontSize: 18,
-    cursor: "pointer",
-    color: "white",
-  },
-
-  chat: {
-    flex: 1,
-    padding: 15,
-    overflowY: "auto",
-    display: "flex",
-    flexDirection: "column",
-    gap: 10,
-    backgroundColor: "#1a1a1a",
-  },
-
-  msg: {
-    padding: "10px 14px",
-    borderRadius: 14,
-    maxWidth: "70%",
-    fontSize: 14,
-    lineHeight: 1.4,
-    textAlign: "left",
-    whiteSpace: "pre-wrap",
-  },
-
-  inputBox: {
-    display: "flex",
-    padding: 10,
-    borderTop: "1px solid #333",
-    gap: 10,
-  },
-
-  input: {
-    flex: 1,
-    padding: 10,
-    borderRadius: 10,
-    border: "1px solid #444",
-    backgroundColor: "#2a2a2a",
-    color: "white",
-    outline: "none",
-  },
-
-  button: {
-    backgroundColor: "#006341",
-    color: "white",
-    border: "none",
-    padding: "10px 16px",
-    borderRadius: 10,
-    cursor: "pointer",
-  },
-
-  loading: {
-    fontSize: 12,
-    color: "#aaa",
-  },
-
-  text: "#eaeaea",
-};
-
-const lightStyles: any = {
-  page: {
-    height: "100vh",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    background: "#f5f5f5",
-    fontFamily: "Arial",
-  },
-
-  container: {
-    width: "90%",
-    maxWidth: 700,
-    height: "80vh",
-    backgroundColor: "white",
-    borderRadius: 18,
-    display: "flex",
-    flexDirection: "column",
-    overflow: "hidden",
-  },
-
-  header: {
-    padding: 15,
-    backgroundColor: "#006341",
-    color: "white",
-    fontSize: 18,
-    fontWeight: "bold",
-    textAlign: "center",
-    position: "relative",
-  },
-
-  toggle: {
-    position: "absolute",
-    right: 15,
-    top: 10,
-    background: "transparent",
-    border: "none",
-    fontSize: 18,
-    cursor: "pointer",
-    color: "white",
-  },
-
-  chat: {
-    flex: 1,
-    padding: 15,
-    overflowY: "auto",
-    display: "flex",
-    flexDirection: "column",
-    gap: 10,
-    backgroundColor: "white",
-  },
-
-  msg: {
-    padding: "10px 14px",
-    borderRadius: 14,
-    maxWidth: "70%",
-    fontSize: 14,
-    lineHeight: 1.4,
-    textAlign: "left",
-    whiteSpace: "pre-wrap",
-  },
-
-  inputBox: {
-    display: "flex",
-    padding: 10,
-    borderTop: "1px solid #eee",
-    gap: 10,
-  },
-
-  input: {
-    flex: 1,
-    padding: 10,
-    borderRadius: 10,
-    border: "1px solid #ccc",
-    outline: "none",
-  },
-
-  button: {
-    backgroundColor: "#006341",
-    color: "white",
-    border: "none",
-    padding: "10px 16px",
-    borderRadius: 10,
-    cursor: "pointer",
-  },
-
-  loading: {
-    fontSize: 12,
-    color: "#666",
-  },
-
-  text: "#1a1a1a",
-};
