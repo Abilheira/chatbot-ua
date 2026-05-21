@@ -7,120 +7,93 @@ type Message = {
 };
 
 export default function App() {
-
   const [message, setMessage] = useState("");
   const [chat, setChat] = useState<Message[]>([
     {
       role: "bot",
-      text: "👋 Olá! Sou o assistente da Universidade de Aveiro. Como posso ajudar?"
-    }
+      text: "Olá! Tira as tuas dúvidas comigo :)",
+    },
   ]);
-
-  const [loading, setLoading] = useState(false);
 
   const endRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [chat, loading]);
+  }, [chat]);
 
-  async function sendMessage() {
+  function getBotResponse(text: string) {
+    const msg = text.toLowerCase();
+
+    if (msg.includes("matrícula")) return "As matrículas começam em setembro.";
+    if (msg.includes("horário")) return "Os horários estão no portal académico.";
+    if (msg.includes("prazo")) return "O prazo termina no final do mês.";
+    if (msg.includes("olá")) return "Olá! Como te posso ajudar?";
+
+    return "Desculpa, ainda não sei responder a isso.";
+  }
+
+  function sendMessage() {
     if (!message.trim()) return;
 
-    const userMessage = message;
+    const userMsg = message;
 
-    setChat((prev) => [...prev, { role: "user", text: userMessage }]);
+    setChat((prev) => [...prev, { role: "user", text: userMsg }]);
     setMessage("");
-    setLoading(true);
 
-    try {
-      const res = await fetch("https://chatbot-ua-wqvd.onrender.com/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: userMessage }),
-      });
-
-      const data = await res.json();
-
+    // resposta do bot (simples, como o teu HTML)
+    setTimeout(() => {
       setChat((prev) => [
         ...prev,
-        { role: "bot", text: data.response },
+        { role: "bot", text: getBotResponse(userMsg) },
       ]);
-    } catch {
-      setChat((prev) => [
-        ...prev,
-        { role: "bot", text: "Erro ao comunicar com o backend." },
-      ]);
-    }
-
-    setLoading(false);
+    }, 500);
   }
 
   return (
-  <div className="app">
+    <div className="app">
 
-    {/* HEADER */}
-    <header className="header">
-      <a href="/">
-        <button className="logo-btn">
-          <img src="/logobranco.png" className="chatbot-image2" />
-        </button>
-      </a>
-    </header>
-
-    {/* MAIN */}
-    <main className="main">
-
-      {/* WELCOME */}
-      <div className="welcome">
-        <img src="/chatbot2.png" className="chatbot-image" />
-
-        <h2>
-          Olá! Tira as tuas<br />
-          dúvidas comigo :)
-        </h2>
+      {/* HEADER */}
+      <div className="topo">
+        <a href="/">
+          <button className="logo-btn">
+            <img src="/logobranco.png" className="chatbot-image2" />
+          </button>
+        </a>
       </div>
 
-      {/* BUTTONS */}
-      <div className="top-buttons">
-        <button className="small-btn">Matrículas</button>
-        <button className="small-btn">Horários</button>
-        <button className="small-btn">Prazos</button>
+      {/* CHAT */}
+      <div className="chat-container">
+        {chat.map((msg, i) => (
+          <div
+            key={i}
+            className={msg.role === "user" ? "mensagem-user" : "mensagem-bot"}
+          >
+            {msg.role === "bot" && (
+              <img src="/chatbot2.png" className="logo-bot" />
+            )}
+            <span>{msg.text}</span>
+          </div>
+        ))}
+
+        <div ref={endRef} />
       </div>
 
       {/* INPUT */}
       <div className="area-input">
         <div className="input-box">
-
           <input
-          type="text"
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-          placeholder="Pergunta alguma coisa..."
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+            placeholder="Pergunta alguma coisa..."
           />
 
-          <button
-            className="botao4"
-            onClick={sendMessage}
-          >
+          <button className="botao" onClick={sendMessage}>
             ➜
           </button>
-
         </div>
-      </div>
+; </div>
 
-      {/* ALERTA */}
-      <p className="texto_alerta">
-        Este chatbot foi desenvolvido no âmbito de um Projeto Final de Licenciatura e encontra-se em fase experimental.
-      </p>
-
-      <p className="texto_alerta2">
-        As informações fornecidas não representam posições oficiais da Universidade de Aveiro.
-      </p>
-
-    </main>
-  </div>
-);
+    </div>
+  );
 }
-
