@@ -59,69 +59,69 @@ export default function App() {
   const theme = darkMode ? darkStyles : lightStyles;
 
   return (
-    <div style={theme.page}>
-      <div style={theme.container}>
-        {/* HEADER */}
-        <div style={theme.header}>
-          🎓 UA Assistente
+  <div className="app">
 
-          <button
-            onClick={() => setDarkMode(!darkMode)}
-            style={theme.toggle}
-          >
-            {darkMode ? "☀️" : "🌙"}
-          </button>
-        </div>
+    {/* HEADER */}
+    <header className="header">
+      <a href="/">
+        <button className="logo-btn">
+          <img src="/logobranco.png" className="chatbot-image2" />
+        </button>
+      </a>
+    </header>
 
-        {/* CHAT */}
-        <div style={theme.chat}>
-          {chat.map((msg, i) => (
-            <div
-              key={i}
-              style={{
-                display: "flex",
-                justifyContent:
-                  msg.role === "user" ? "flex-end" : "flex-start",
-              }}
-            >
-              <div
-                style={{
-                  ...theme.msg,
-                  backgroundColor:
-                    msg.role === "user"
-                      ? "#006341"
-                      : darkMode
-                      ? "#2a2a2a"
-                      : "#F2F2F2",
-                  color: msg.role === "user" ? "white" : theme.text,
-                }}
-              >
-                {msg.text}
-              </div>
-            </div>
-          ))}
+    {/* MAIN */}
+    <main className="main">
 
-          {loading && <div style={theme.loading}>A pensar...</div>}
-          <div ref={endRef} />
-        </div>
+      {/* WELCOME */}
+      <div className="welcome">
+        <img src="/chatbot2.png" className="chatbot-image" />
 
-        {/* INPUT */}
-        <div style={theme.inputBox}>
+        <h2>
+          Olá! Tira as tuas<br />
+          dúvidas comigo :)
+        </h2>
+      </div>
+
+      {/* BUTTONS */}
+      <div className="top-buttons">
+        <button className="small-btn">Matrículas</button>
+        <button className="small-btn">Horários</button>
+        <button className="small-btn">Prazos</button>
+      </div>
+
+      {/* INPUT */}
+      <div className="area-input">
+        <div className="input-box">
+
           <input
-            style={theme.input}
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-            placeholder="Pergunta sobre a Universidade de Aveiro..."
+            type="text"
+            id="mensagem"
+            placeholder="Pergunta alguma coisa..."
           />
 
-          <button style={theme.button} onClick={sendMessage}>
-            Enviar
+          <button
+            className="botao4"
+            onClick={sendMessage}
+          >
+            ➜
           </button>
+
         </div>
       </div>
-    </div>
-  );
+
+      {/* ALERTA */}
+      <p className="texto_alerta">
+        Este chatbot foi desenvolvido no âmbito de um Projeto Final de Licenciatura e encontra-se em fase experimental.
+      </p>
+
+      <p className="texto_alerta2">
+        As informações fornecidas não representam posições oficiais da Universidade de Aveiro.
+      </p>
+
+    </main>
+  </div>
+);
 }
 
 /* ================= THEMES ================= */
