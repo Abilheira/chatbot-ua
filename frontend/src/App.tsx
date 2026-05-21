@@ -52,6 +52,8 @@ export default function App() {
   return (
     <div className="app">
 
+      <div className="page">
+
       {/* HEADER */}
       <div className="topo">
         <a href="/">
@@ -95,5 +97,7 @@ export default function App() {
 </div>
 
     </div>
+    </div>
+    
   );
 }
