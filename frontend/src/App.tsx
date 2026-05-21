@@ -93,9 +93,11 @@ export default function App() {
         <div className="input-box">
 
           <input
-            type="text"
-            id="mensagem"
-            placeholder="Pergunta alguma coisa..."
+          type="text"
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+          placeholder="Pergunta alguma coisa..."
           />
 
           <button
