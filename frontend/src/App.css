@@ -80,10 +80,16 @@
 }
 
 .input-box input {
-  flex: 1;
+   flex: 1;
   border: none;
   outline: none;
   font-size: 16px;
+
+  background: transparent; /* ou white */
+  appearance: none;
+  -webkit-appearance: none;
+
+  padding-left: 10px;
 }
 
 .botao {
