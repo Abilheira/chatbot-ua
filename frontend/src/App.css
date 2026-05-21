@@ -6,31 +6,13 @@
   background: #e9e9e9;
 }
 
-.topo,
-.chat-container,
-.area-input {
-  width: 100%;
-  max-width: 700px;
-  margin: 0 auto;
-}
-
-.topo-wrapper {
-  width: 100%;
-  background: #55b51f;
-  display: flex;
-  justify-content: center;
-}
-
-
 /* HEADER (no teu React é .topo) */
 .topo {
-  .topo {
   width: 100%;
-  max-width: 700px;
-  padding: 10px 0;
+  background: #55b51f;
+  padding: 10px 40px;
   display: flex;
   align-items: center;
-}
 }
 
 .logo-btn {
@@ -104,7 +86,7 @@
   font-size: 16px;
 
   background: transparent;
-  color: #000;
+  
   appearance: none;
   -webkit-appearance: none;
 

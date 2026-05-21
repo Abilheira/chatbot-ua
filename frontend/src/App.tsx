@@ -52,10 +52,7 @@ export default function App() {
   return (
     <div className="app">
 
-      
-
       {/* HEADER */}
-      <div className="topo-wrapper">
       <div className="topo">
         <a href="/">
           <button className="logo-btn">
@@ -95,9 +92,8 @@ export default function App() {
             ➜
           </button>
         </div>
-</div>
+; </div>
 
-    </div>
     </div>
   );
 }
