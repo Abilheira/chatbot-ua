@@ -16,7 +16,6 @@ export default function App() {
   ]);
 
   const [loading, setLoading] = useState(false);
-  const [darkMode, setDarkMode] = useState(true);
 
   const endRef = useRef<HTMLDivElement | null>(null);
 
