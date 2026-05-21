@@ -86,6 +86,7 @@
   font-size: 16px;
 
   background: transparent;
+  color: var(--text, #000);
   
   appearance: none;
   -webkit-appearance: none;
