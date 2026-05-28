@@ -8,6 +8,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+chat_history = []
+
 app = FastAPI()
 
 app.add_middleware(
@@ -104,9 +106,20 @@ def health():
 def chat(req: ChatRequest):
     user_message = req.message
 
+    # guardar user
+    chat_history.append({"role": "user", "text": user_message})
+
+    # criar histórico
+    history_text = ""
+    for msg in chat_history[-6:]:
+        history_text += f"{msg['role']}: {msg['text']}\n"
+
 
     prompt = f"""
 És um assistente oficial da Universidade de Aveiro.
+
+HISTÓRICO DA CONVERSA:
+{history_text}
 
 REGRAS IMPORTANTES:
 - Só respondes a perguntas relacionadas com a Universidade de Aveiro
@@ -115,10 +128,10 @@ REGRAS IMPORTANTES:
 
 Usa apenas a informação abaixo (site da UA):
 
+INFORMAÇÃO UA:
 {get_context(user_message)}
 
-
-Pergunta:
+Pergunta atual:
 {user_message}
 
 Responde de forma clara e útil.
@@ -144,5 +157,9 @@ Responde de forma clara e útil.
         reply = data["candidates"][0]["content"]["parts"][0]["text"]
     except:
         reply = "Erro ao gerar resposta."
+
+
+    # guardar bot
+    chat_history.append({"role": "assistant", "text": reply})
 
     return {"response": reply}
