@@ -31,12 +31,9 @@ export default function App() {
 
   const userMsg = message;
 
-  setChat((prev) => [...prev, {
-    role: "user",
-    text: userMsg
-  }]);
-
+  setChat((prev) => [...prev, { role: "user", text: userMsg }]);
   setMessage("");
+  setLoading(true);
 
   try {
     const response = await fetch("https://chatbot-ua-wqvd.onrender.com/chat", {
@@ -67,6 +64,7 @@ export default function App() {
       },
     ]);
   }
+  setLoading(false);
 }
 
   return (
