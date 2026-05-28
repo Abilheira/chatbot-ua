@@ -21,6 +21,14 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [ttsEnabled, setTtsEnabled] = useState(true);
 
+  
+  useEffect(() => {
+    if (!ttsEnabled) {
+      window.speechSynthesis.cancel();
+    }
+  }, [ttsEnabled]);
+
+
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chat]);
@@ -55,7 +63,9 @@ export default function App() {
         text: data.response,
       },
     ]);
-    speak(data.response);
+    setTimeout(() => {
+  speak(data.response);
+}, 100);
 
   } catch (error) {
     setChat((prev) => [
@@ -81,8 +91,6 @@ function speak(text: string) {
 
   window.speechSynthesis.speak(utterance);
 }
-
-
 
 
   return (
