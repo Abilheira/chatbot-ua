@@ -18,6 +18,7 @@ export default function App() {
   const endRef = useRef<HTMLDivElement | null>(null);
 
   const [darkMode, setDarkMode] = useState(false);
+  const [loading, setLoading] = useState(false);
 
 
   useEffect(() => {
@@ -99,7 +100,11 @@ export default function App() {
             <span>{msg.text}</span>
           </div>
         ))}
-
+            {loading && (
+            <div aria-live="polite" aria-busy="true" className="loading-text">
+            A responder...
+            </div>
+            )}
         <div ref={endRef} />
       </div>
 
