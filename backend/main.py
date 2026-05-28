@@ -137,7 +137,7 @@ Pergunta atual:
 Responde de forma clara e útil.
 """
 
-    url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=" + GEMINI_API_KEY
+    url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + GEMINI_API_KEY
 
     payload = {
         "contents": [
