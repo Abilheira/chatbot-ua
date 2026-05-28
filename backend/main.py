@@ -23,99 +23,8 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
 class ChatRequest(BaseModel):
     message: str
-
-
-def is_university_question(text: str):
-    text_lower = text.lower()
-
-    # ✅ keywords UA
-    ua_keywords = [
-        "ua",
-        "aveiro",
-        "universidade de aveiro",
-        "universidade",
-        "curso",
-        "cursos",
-        "matricula",
-        "inscricao",
-        "exame",
-        "cadeira",
-        "campus",
-        "propina",
-        "mestrado",
-        "licenciatura",
-        "erasmus",
-        "estudante",
-        "academico"
-    ]
-
-    # ❌ temas bloqueados
-    blocked_keywords = [
-        "futebol",
-        "mundial",
-        "nba",
-        "filme",
-        "musica",
-        "presidente",
-        "guerra",
-        "noticias",
-        "tempo",
-        "clima",
-        "benfica",
-        "porto",
-        "sporting"
-    ]
-
-    # 🚫 bloqueia logo
-    if any(word in text_lower for word in blocked_keywords):
-        return False
-
-    # ✅ deixa passar logo
-    if any(word in text_lower for word in ua_keywords):
-        return True
     
-    # 🤖 fallback Gemini
-    prompt = f"""
-Classifica esta pergunta.
-
-Responde APENAS com YES ou NO.
-
-YES = perguntas sobre a Universidade de Aveiro.
-NO = qualquer outro tema.
-
-Pergunta:
-{text}
-"""
-
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}"
-
-    payload = {
-        "contents": [
-            {
-                "parts": [{"text": prompt}]
-            }
-        ]
-    }
-
-    response = requests.post(url, json=payload)
-
-    if response.status_code != 200:
-        return False
-
-    try:
-        data = response.json()
-
-        result = data["candidates"][0]["content"]["parts"][0]["text"]
-        result = result.strip().upper()
-
-        result = result.replace(".", "").replace(",", "")
-
-        return result == "YES"
-
-    except:
-        return False
-    
-    # =========================
+# =========================
 # UA SCRAPING
 # =========================
 
@@ -195,15 +104,16 @@ def health():
 def chat(req: ChatRequest):
     user_message = req.message
 
-    if not is_university_question(user_message):
-        return {
-            "response": "Desculpa, só posso responder a questões relacionadas com a Universidade de Aveiro."
-        }
 
     prompt = f"""
-És um assistente da Universidade de Aveiro.
+És um assistente oficial da Universidade de Aveiro.
 
-Usa APENAS a informação abaixo (site da UA):
+REGRAS IMPORTANTES:
+- Só respondes a perguntas relacionadas com a Universidade de Aveiro
+- Se a pergunta NÃO for sobre a UA, responde exatamente:
+  "Desculpa, só posso responder a questões relacionadas com a Universidade de Aveiro."
+
+Usa apenas a informação abaixo (site da UA):
 
 {get_context(user_message)}
 
