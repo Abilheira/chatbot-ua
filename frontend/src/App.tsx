@@ -19,12 +19,6 @@ export default function App() {
 
   const [darkMode, setDarkMode] = useState(false);
 
-  <button
-  onClick={() => setDarkMode(!darkMode)}
-  className="dark-toggle"
->
-  {darkMode ? "☀️" : "🌙"}
-</button>
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -84,6 +78,12 @@ export default function App() {
             <img src="/logobranco.png" className="chatbot-image2" />
           </button>
         </a>
+          \<button
+            onClick={() => setDarkMode(!darkMode)}
+            className="dark-toggle"
+          >
+            {darkMode ? "☀️" : "🌙"}
+          </button>
       </div>
 
       {/* CHAT */}
