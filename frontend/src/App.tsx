@@ -17,6 +17,15 @@ export default function App() {
 
   const endRef = useRef<HTMLDivElement | null>(null);
 
+  const [darkMode, setDarkMode] = useState(false);
+
+  <button
+  onClick={() => setDarkMode(!darkMode)}
+  className="dark-toggle"
+>
+  {darkMode ? "☀️" : "🌙"}
+</button>
+
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chat]);
@@ -66,7 +75,7 @@ export default function App() {
 }
 
   return (
-    <div className="app">
+    <div className={`app ${darkMode ? "dark" : ""}`}>
 
       {/* HEADER */}
       <div className="topo">

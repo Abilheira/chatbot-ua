@@ -153,7 +153,7 @@ def build_ua_knowledge():
 
     all_text = ""
 
-    for i, url in enumerate(urls[:100]):  # limita para não rebentar
+    for i, url in enumerate(urls[:200]):  # limita para não rebentar
         print(f"Scraping {i+1}/{len(urls)}:", url)
 
         try:
