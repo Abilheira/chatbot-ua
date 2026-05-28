@@ -119,40 +119,50 @@ Pergunta:
 # UA SCRAPING
 # =========================
 
-UA_URLS = [
-    "https://www.ua.pt/pt/curso",
-    "https://www.ua.pt/pt/cursos",
-    "https://www.ua.pt/pt/departamentos",
-]
+SITEMAP_URL = "https://www.ua.pt/sitemap.xml"
+
+def get_all_urls_from_sitemap():
+    r = requests.get(SITEMAP_URL)
+    soup = BeautifulSoup(r.text, "xml")
+
+    urls = []
+
+    for loc in soup.find_all("loc"):
+        url = loc.text
+        if "ua.pt" in url:
+            urls.append(url)
+
+    return urls
 
 
 def scrape(url):
     headers = {"User-Agent": "Mozilla/5.0"}
-    r = requests.get(url, headers=headers)
+    r = requests.get(url, headers=headers, timeout=10)
 
     soup = BeautifulSoup(r.text, "html.parser")
 
     for tag in soup(["script", "style", "nav", "footer", "header"]):
         tag.decompose()
 
-    links = []
-    for a in soup.find_all("a"):
-        text = a.get_text(strip=True)
-        if text:
-            links.append(text)
-
-    return " ".join(links)
+    text = soup.get_text(separator=" ", strip=True)
+    return text
 
 
 def build_ua_knowledge():
+    urls = get_all_urls_from_sitemap()
+
     all_text = ""
 
-    for url in UA_URLS:
-        print("🔄 Scraping:", url)
+    for i, url in enumerate(urls[:100]):  # limita para não rebentar
+        print(f"Scraping {i+1}/{len(urls)}:", url)
 
-        all_text += scrape(url)
+        try:
+            all_text += scrape(url) + " "
+        except:
+            continue
 
     return all_text
+
 
 
 print("🔄 Loading UA knowledge...")
