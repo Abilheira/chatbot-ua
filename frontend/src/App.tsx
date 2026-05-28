@@ -78,7 +78,7 @@ export default function App() {
             <img src="/logobranco.png" className="chatbot-image2" />
           </button>
         </a>
-          \<button
+          <button
             onClick={() => setDarkMode(!darkMode)}
             className="dark-toggle"
           >
