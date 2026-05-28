@@ -21,33 +21,49 @@ export default function App() {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chat]);
 
-  function getBotResponse(text: string) {
-    const msg = text.toLowerCase();
 
-    if (msg.includes("matrícula")) return "As matrículas começam em setembro.";
-    if (msg.includes("horário")) return "Os horários estão no portal académico.";
-    if (msg.includes("prazo")) return "O prazo termina no final do mês.";
-    if (msg.includes("olá")) return "Olá! Como te posso ajudar?";
+  async function sendMessage() {
+  if (!message.trim()) return;
 
-    return "Desculpa, ainda não sei responder a isso.";
+  const userMsg = message;
+
+  setChat((prev) => [...prev, {
+    role: "user",
+    text: userMsg
+  }]);
+
+  setMessage("");
+
+  try {
+    const response = await fetch("http://chatbot-ua.vercel.app//chat", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        message: userMsg,
+      }),
+    });
+
+    const data = await response.json();
+
+    setChat((prev) => [
+      ...prev,
+      {
+        role: "bot",
+        text: data.response,
+      },
+    ]);
+  } catch (error) {
+    setChat((prev) => [
+      ...prev,
+      {
+        role: "bot",
+        text: "Erro ao ligar ao servidor.",
+      },
+    ]);
   }
-
-  function sendMessage() {
-    if (!message.trim()) return;
-
-    const userMsg = message;
-
-    setChat((prev) => [...prev, { role: "user", text: userMsg }]);
-    setMessage("");
-
-    // resposta do bot (simples, como o teu HTML)
-    setTimeout(() => {
-      setChat((prev) => [
-        ...prev,
-        { role: "bot", text: getBotResponse(userMsg) },
-      ]);
-    }, 500);
-  }
+}
 
   return (
     <div className="app">
