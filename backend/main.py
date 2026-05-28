@@ -123,7 +123,7 @@ SITEMAP_URL = "https://www.ua.pt/sitemap.xml"
 
 def get_all_urls_from_sitemap():
     r = requests.get(SITEMAP_URL)
-    soup = BeautifulSoup(r.text, "xml")
+    soup = BeautifulSoup(r.text, "lxml-xml")
 
     urls = []
 
