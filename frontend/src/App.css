@@ -160,3 +160,12 @@
   font-size: 20px;
   cursor: pointer;
 }
+
+.dark-toggle,
+.tts-btn {
+  background: transparent;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  margin-left: 10px;
+}

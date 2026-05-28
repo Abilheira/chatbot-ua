@@ -55,6 +55,8 @@ export default function App() {
         text: data.response,
       },
     ]);
+    speak(data.response);
+
   } catch (error) {
     setChat((prev) => [
       ...prev,
@@ -66,6 +68,23 @@ export default function App() {
   }
   setLoading(false);
 }
+
+function speak(text: string) {
+  window.speechSynthesis.cancel(); // evita sobreposição
+
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = "pt-PT";
+  utterance.rate = 1;
+  utterance.pitch = 1;
+
+  window.speechSynthesis.speak(utterance);
+}
+
+function stopSpeaking() {
+  window.speechSynthesis.cancel();
+}
+
+
 
   return (
     <div className={`app ${darkMode ? "dark" : ""}`}>
@@ -82,6 +101,9 @@ export default function App() {
             className="dark-toggle"
           >
             {darkMode ? "☀️" : "🌙"}
+          </button>
+          <button onClick={stopSpeaking} className="tts-btn">
+              🔇
           </button>
       </div>
 
