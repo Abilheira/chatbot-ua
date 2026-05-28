@@ -35,7 +35,7 @@ export default function App() {
   setMessage("");
 
   try {
-    const response = await fetch("http://chatbot-ua.vercel.app//chat", {
+    const response = await fetch("http://chatbot-ua.vercel.app/chat", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
