@@ -169,3 +169,25 @@
   cursor: pointer;
   margin-left: 10px;
 }
+
+
+.topo {
+  width: 100%;
+  background: #55b51f;
+  padding: 10px 40px;
+  display: flex;
+  justify-content: space-between; /* 👈 isto resolve o "random" */
+  align-items: center;
+}
+
+.header-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.icon-btn {
+  background: transparent;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+}

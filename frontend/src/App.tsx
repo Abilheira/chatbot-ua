@@ -19,7 +19,7 @@ export default function App() {
 
   const [darkMode, setDarkMode] = useState(false);
   const [loading, setLoading] = useState(false);
-
+  const [ttsEnabled, setTtsEnabled] = useState(true);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -70,7 +70,9 @@ export default function App() {
 }
 
 function speak(text: string) {
-  window.speechSynthesis.cancel(); // evita sobreposição
+  if (!ttsEnabled) return; // 👈 isto é o toggle
+
+  window.speechSynthesis.cancel();
 
   const utterance = new SpeechSynthesisUtterance(text);
   utterance.lang = "pt-PT";
@@ -80,9 +82,6 @@ function speak(text: string) {
   window.speechSynthesis.speak(utterance);
 }
 
-function stopSpeaking() {
-  window.speechSynthesis.cancel();
-}
 
 
 
@@ -90,22 +89,23 @@ function stopSpeaking() {
     <div className={`app ${darkMode ? "dark" : ""}`}>
 
       {/* HEADER */}
-      <div className="topo">
-        <a href="/">
-          <button className="logo-btn">
-            <img src="/logobranco.png" className="chatbot-image2" />
-          </button>
-        </a>
-          <button
-            onClick={() => setDarkMode(!darkMode)}
-            className="dark-toggle"
-          >
-            {darkMode ? "☀️" : "🌙"}
-          </button>
-          <button onClick={stopSpeaking} className="tts-btn">
-              🔇
-          </button>
-      </div>
+     <div className="topo">
+  <a href="/">
+    <button className="logo-btn">
+      <img src="/logobranco.png" className="chatbot-image2" />
+    </button>
+  </a>
+
+  <div className="header-actions">
+    <button onClick={() => setDarkMode(!darkMode)} className="icon-btn">
+      {darkMode ? "☀️" : "🌙"}
+    </button>
+
+    <button onClick={() => setTtsEnabled(!ttsEnabled)} className="icon-btn">
+      {ttsEnabled ? "🔊" : "🔇"}
+    </button>
+  </div>
+</div>
 
       {/* CHAT */}
       <div className="chat-container">
