@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import "./App.css";
+import Home from "./home";
 
 type Message = {
   role: "user" | "bot";
@@ -7,7 +8,10 @@ type Message = {
 };
 
 export default function App() {
+  const [page, setPage] = useState<"home" | "chat">("home");
+
   const [message, setMessage] = useState("");
+
   const [chat, setChat] = useState<Message[]>([
     {
       role: "bot",
@@ -21,137 +25,154 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [ttsEnabled, setTtsEnabled] = useState(true);
 
-  
   useEffect(() => {
     if (!ttsEnabled) {
       window.speechSynthesis.cancel();
     }
   }, [ttsEnabled]);
 
-
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chat]);
 
-
-  async function sendMessage() {
-  if (!message.trim()) return;
-
-  const userMsg = message;
-
-  setChat((prev) => [...prev, { role: "user", text: userMsg }]);
-  setMessage("");
-  setLoading(true);
-
-  try {
-    const response = await fetch("https://chatbot-ua-wqvd.onrender.com/chat", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        message: userMsg,
-      }),
-    });
-
-    const data = await response.json();
-
-    setChat((prev) => [
-      ...prev,
-      {
-        role: "bot",
-        text: data.response,
-      },
-    ]);
-    setTimeout(() => {
-  speak(data.response);
-}, 100);
-
-  } catch (error) {
-    setChat((prev) => [
-      ...prev,
-      {
-        role: "bot",
-        text: "Erro ao ligar ao servidor.",
-      },
-    ]);
+  function startChat() {
+    setPage("chat");
   }
-  setLoading(false);
-}
 
-function speak(text: string) {
-  if (!ttsEnabled) return; // 👈 isto é o toggle
+  async function sendMessage(customMessage?: string) {
+    const msg = customMessage ?? message;
+    if (!msg.trim()) return;
 
-  window.speechSynthesis.cancel();
+    setChat((prev) => [...prev, { role: "user", text: msg }]);
+    setMessage("");
+    setLoading(true);
 
-  const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = "pt-PT";
-  utterance.rate = 1;
-  utterance.pitch = 1;
+    try {
+      const response = await fetch(
+        "https://chatbot-ua-wqvd.onrender.com/chat",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ message: msg }),
+        }
+      );
 
-  window.speechSynthesis.speak(utterance);
-}
+      const data = await response.json();
 
+      setChat((prev) => [
+        ...prev,
+        { role: "bot", text: data.response },
+      ]);
+
+      setTimeout(() => speak(data.response), 100);
+    } catch {
+      setChat((prev) => [
+        ...prev,
+        { role: "bot", text: "Erro ao ligar ao servidor." },
+      ]);
+    }
+
+    setLoading(false);
+  }
+
+  function speak(text: string) {
+    if (!ttsEnabled) return;
+
+    window.speechSynthesis.cancel();
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = "pt-PT";
+    utterance.rate = 1;
+    utterance.pitch = 1;
+
+    window.speechSynthesis.speak(utterance);
+  }
 
   return (
     <div className={`app ${darkMode ? "dark" : ""}`}>
 
-      {/* HEADER */}
-     <div className="topo">
-  <a href="/">
-    <button className="logo-btn">
-      <img src="/logobranco.png" className="chatbot-image2" />
-    </button>
-  </a>
+      {page === "home" ? (
+        <Home
+          onStart={startChat}
+          setMessage={(msg) => {
+            setMessage(msg);
+            setPage("chat");
+          }}
+        />
+      ) : (
+        <>
+          {/* HEADER */}
+          <div className="topo">
+            <button className="logo-btn" onClick={() => setPage("home")}>
+              <img src="/logobranco.png" className="chatbot-image2" />
+            </button>
 
-  <div className="header-actions">
-    <button onClick={() => setDarkMode(!darkMode)} className="icon-btn">
-      {darkMode ? "☀️" : "🌙"}
-    </button>
+            <div className="header-actions">
+              <button
+                onClick={() => setDarkMode(!darkMode)}
+                className="icon-btn"
+              >
+                {darkMode ? "☀️" : "🌙"}
+              </button>
 
-    <button onClick={() => setTtsEnabled(!ttsEnabled)} className="icon-btn">
-      {ttsEnabled ? "🔊" : "🔇"}
-    </button>
-  </div>
-</div>
-
-      {/* CHAT */}
-      <div className="chat-container">
-        {chat.map((msg, i) => (
-          <div
-            key={i}
-            className={msg.role === "user" ? "mensagem-user" : "mensagem-bot"}
-          >
-            {msg.role === "bot" && (
-              <img src="/chatbot2.png" className="logo-bot" />
-            )}
-            <span>{msg.text}</span>
-          </div>
-        ))}
-            {loading && (
-            <div aria-live="polite" aria-busy="true" className="loading-text">
-            A responder...
+              <button
+                onClick={() => setTtsEnabled(!ttsEnabled)}
+                className="icon-btn"
+              >
+                {ttsEnabled ? "🔊" : "🔇"}
+              </button>
             </div>
+          </div>
+
+          {/* CHAT */}
+          <div className="chat-container">
+            {chat.map((msg, i) => (
+              <div
+                key={i}
+                className={
+                  msg.role === "user"
+                    ? "mensagem-user"
+                    : "mensagem-bot"
+                }
+              >
+                {msg.role === "bot" && (
+                  <img src="/chatbot2.png" className="logo-bot" />
+                )}
+                <span>{msg.text}</span>
+              </div>
+            ))}
+
+            {loading && (
+              <div className="loading-text">A responder...</div>
             )}
-        <div ref={endRef} />
-      </div>
 
-      {/* INPUT */}
-      <div className="area-input">
-        <div className="input-box">
-          <input
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-            placeholder="Pergunta alguma coisa..."
-          />
+            <div ref={endRef} />
+          </div>
 
-          <button className="botao" onClick={sendMessage}>
-            ➜
-          </button>
-        </div>
- </div>
+          {/* INPUT */}
+          <div className="area-input">
+            <div className="input-box">
+              <input
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                onKeyDown={(e) =>
+                  e.key === "Enter" && sendMessage()
+                }
+                placeholder="Pergunta alguma coisa..."
+              />
 
+              <button
+                className="botao"
+                onClick={() => sendMessage()}
+              >
+                ➜
+              </button>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }
