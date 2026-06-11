@@ -1,4 +1,4 @@
-import "./Home.css";
+import "./App.css";
 
 type Props = {
   onStart: () => void;
