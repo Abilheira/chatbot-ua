@@ -23,15 +23,17 @@ IAEDU_API_KEY = os.getenv("IAEDU_API_KEY")
 
 chat_history = []
 
+
 class ChatRequest(BaseModel):
     message: str
 
 
 # =========================
-# UA SCRAPING (simples e estável)
+# UA SCRAPING
 # =========================
 
 SITEMAP_URL = "https://www.ua.pt/sitemap.xml"
+
 
 def get_all_urls_from_sitemap():
     try:
@@ -40,6 +42,7 @@ def get_all_urls_from_sitemap():
         return [loc.text for loc in soup.find_all("loc") if "ua.pt" in loc.text]
     except:
         return []
+
 
 def scrape(url):
     try:
@@ -54,6 +57,7 @@ def scrape(url):
         return soup.get_text(separator=" ", strip=True)
     except:
         return ""
+
 
 print("🔄 Loading UA knowledge...")
 
@@ -88,6 +92,8 @@ def get_context(query):
 def chat(req: ChatRequest):
 
     user_message = req.message
+    print("\nUSER:", user_message)
+
     chat_history.append({"role": "user", "text": user_message})
 
     history_text = "\n".join(
@@ -157,10 +163,17 @@ PERGUNTA:
                     reply += data.get("content", "")
 
                 elif data.get("type") == "message":
-                    reply = data.get("content", {}).get("content", reply)
+                    content = data.get("content", {})
+                    if isinstance(content, dict):
+                        reply = content.get("content", reply)
+                    else:
+                        reply = content
 
-            except:
+            except Exception as e:
+                print("PARSE ERROR:", e)
                 continue
+
+        print("FINAL REPLY:", reply)
 
         if not reply:
             reply = "Erro ao gerar resposta."
