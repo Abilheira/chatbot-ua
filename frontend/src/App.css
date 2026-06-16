@@ -1,13 +1,19 @@
 .app {
   font-family: 'Poppins', sans-serif;
-  min-height: 100vh;
+  height: 100vh;
   display: flex;
   flex-direction: column;
   background: #e9e9e9;
 }
 
 /* HEADER (no teu React é .topo) */
-
+.topo {
+  width: 100%;
+  background: #55b51f;
+  padding: 10px 40px;
+  display: flex;
+  align-items: center;
+}
 
 .logo-btn {
   background: none;
@@ -165,14 +171,7 @@
 }
 
 
-.topo {
-  width: 100%;
-  background: #55b51f;
-  padding: 10px 40px;
-  display: flex;
-  justify-content: space-between; /* 👈 isto resolve o "random" */
-  align-items: center;
-}
+
 
 .header-actions {
   display: flex;
