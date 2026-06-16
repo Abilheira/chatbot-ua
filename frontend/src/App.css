@@ -191,3 +191,8 @@
   font-size: 20px;
   cursor: pointer;
 }
+
+.chatbot-image {
+  width: 180px;
+  height: auto;
+}
