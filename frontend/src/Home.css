@@ -93,3 +93,46 @@
   border-radius: 25px;
   cursor: pointer;
 }
+
+
+.home-header {
+  width: 100%;
+  background: #55b51f;
+  padding: 10px 40px;
+
+  display: flex;
+  justify-content: space-between; /* ESQUERDA + DIREITA */
+  align-items: center;
+}
+
+.home-left {
+  display: flex;
+  align-items: center;
+}
+
+.home-right {
+  display: flex;
+  align-items: center;
+}
+
+.icon-btn {
+  background: transparent;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.home.dark {
+  background: #121212;
+  color: #f5f5f5;
+}
+
+.home.dark .home-header {
+  background: #1f1f1f;
+}
+
+.home.dark .suggestions button,
+.home.dark .shortcuts a {
+  background: #2a2a2a;
+  color: white;
+}

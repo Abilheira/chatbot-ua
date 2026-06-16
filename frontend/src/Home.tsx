@@ -3,16 +3,35 @@ import "./Home.css";
 type Props = {
   onStart: () => void;
   onSuggestionClick: (text: string) => void;
+  darkMode: boolean;
+  setDarkMode: () => void;
 };
 
-export default function Home({ onStart, onSuggestionClick }: Props) {
+export default function Home({
+  onStart,
+  onSuggestionClick,
+  darkMode,
+  setDarkMode,
+}: Props) {
   return (
-    <div className="home">
+    <div className={`home ${darkMode ? "dark" : ""}`}>
 
+      {/* HEADER */}
       <div className="home-header">
-        <img src="/logobranco.png" className="home-logo" />
+
+        <div className="home-left">
+          <img src="/logobranco.png" className="home-logo" />
+        </div>
+
+        <div className="home-right">
+          <button className="icon-btn" onClick={setDarkMode}>
+            {darkMode ? "☀️" : "🌙"}
+          </button>
+        </div>
+
       </div>
 
+      {/* MAIN */}
       <div className="home-main">
 
         <img src="/chatbot2.png" className="home-bot" />
@@ -64,6 +83,7 @@ export default function Home({ onStart, onSuggestionClick }: Props) {
 
         </div>
 
+        {/* BOTÃO COMEÇAR */}
         <button className="start-btn" onClick={onStart}>
           Começar ➜
         </button>
