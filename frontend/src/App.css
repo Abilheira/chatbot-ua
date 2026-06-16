@@ -179,6 +179,7 @@
   display: flex;
   justify-content: space-between; /* 👈 isto resolve o "random" */
   align-items: center;
+  box-sizing: border-box;
 }
 
 .header-actions {
