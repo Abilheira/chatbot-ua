@@ -20,6 +20,10 @@ app.add_middleware(
 
 IAEDU_API_KEY = os.getenv("IAEDU_API_KEY")
 
+# 🚨 CLASSE CORRIGIDA (O que estava em falta e fez o Render crashar)
+class ChatRequest(BaseModel):
+    message: str
+
 # =====================================================================
 # CONTEXTO DE EMERGÊNCIA (Hardcoded para garantir que o Render lê sempre)
 # =====================================================================
@@ -49,7 +53,7 @@ def chat(req: ChatRequest):
     # 1. TRAVÃO RÍGIDO (Filtro por Palavras-Chave no Código)
     palavras_chave = ["ua", "aveiro", "universidade", "paco", "sasua", "curso", "propina", "matrícula", "alojamento", "licenciatura", "mestrado", "estudante", "campus"]
     
-    # Se NÃO tem palavras da UA E NÃO tem "aveiro", bloqueia direto
+    # Se NÃO tem palavras da UA, bloqueia direto e dá a nega instantânea
     if not any(p in q_low for p in palavras_chave):
         return {"response": "Lamento, mas sou um assistente exclusivo da Universidade de Aveiro. Não posso responder a assuntos externos (como o Benfica, culinária ou outros temas)."}
 
@@ -81,11 +85,10 @@ def chat(req: ChatRequest):
         if response.status_code != 200:
             return {"response": f"Erro na API da IAedu (Código {response.status_code}). Verifica a tua API Key no Render!"}
 
-        # Vamos ver o que veio no texto cru para não usar parsers que possam falhar
         raw_text = response.text
         reply = ""
         
-        # Tenta extrair os tokens do formato SSE (Server-Sent Events)
+        # Processa os dados retornados
         for line in raw_text.split("\n"):
             if "data:" in line:
                 try:
@@ -99,7 +102,6 @@ def chat(req: ChatRequest):
                 except:
                     continue
 
-        # Se o loop do stream falhou mas temos texto bruto, mostramos o texto bruto abreviado para diagnóstico
         if not reply.strip():
             return {"response": f"A API respondeu mas o formato mudou. Resposta crua da FCT: {raw_text[:200]}"}
 
