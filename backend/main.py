@@ -24,93 +24,65 @@ chat_history = []
 class ChatRequest(BaseModel):
     message: str
 
-# =====================================================================
-# BASE DE CONHECIMENTO (Simulada para estabilidade, expande conforme precisares)
-# =====================================================================
-# Em vez de fazeres scrape a 80 páginas todas as vezes que o servidor inicia,
-# o ideal é guardares o texto num ficheiro .txt ou JSON local e lê-lo aqui.
-UA_KNOWLEDGE = [
-    "A Universidade de Aveiro (UA) é uma fundação pública com regime de direito privado.",
-    "Os serviços de ação social da UA (SASUA) gerem os alojamentos e cantinas universitárias.",
-    "A UA oferece licenciaturas, mestrados e doutoramentos em áreas como Engenharia, Ciências e Artes.",
-    "O campus principal da Universidade de Aveiro localiza-se em Santiago, Aveiro.",
-    "As inscrições e matrículas na UA são feitas através do portal académico PACO."
-]
+# Carrega o conhecimento guardado pelo scraper
+UA_KNOWLEDGE = []
+if os.path.exists("ua_conhecimento.txt"):
+    with open("ua_conhecimento.txt", "r", encoding="utf-8") as f:
+        UA_KNOWLEDGE = [linha.strip() for linha in f.readlines() if len(linha.strip()) > 10]
+    print(f"✅ Base de dados carregada: {len(UA_KNOWLEDGE)} linhas.")
+else:
+    print("⚠️ Ficheiro ua_conhecimento.txt não encontrado!")
+    UA_KNOWLEDGE = ["A Universidade de Aveiro (UA) localiza-se em Aveiro, Portugal."]
 
-def get_context_and_verify(query: str):
-    query_lower = query.lower()
+def verificar_e_filtrar(query: str):
+    """
+    O TRAVÃO (BRAKE): Garante que perguntas aleatórias (Benfica, receitas, etc.)
+    nem sequer gastam a API da IAedu.
+    """
+    q_low = query.lower()
     
-    # Palavras-chave obrigatórias para o "Brake" (Filtro)
-    ua_keywords = ["ua", "aveiro", "universidade", "paco", "sasua", "campus", "curso", "propina", "matrícula", "alojamento", "licenciatura", "mestrado"]
+    # Palavras-chave obrigatórias sobre o universo universitário/Aveiro
+    palavras_chave = ["ua", "aveiro", "universidade", "paco", "sasua", "curso", "propina", "matrícula", "alojamento", "licenciatura", "mestrado", "estudante", "campus"]
     
-    has_keyword = any(keyword in query_lower for keyword in ua_keywords)
+    # Se o utilizador usar alguma palavra-chave, consideramos válido
+    it_is_ua = any(p in q_low for p in palavras_chave)
     
-    scored_chunks = []
-    for chunk in UA_KNOWLEDGE:
-        # Pontuação baseada em palavras exatas para evitar lixo
-        score = sum(1 for word in query_lower.split() if len(word) > 3 and word in chunk.lower())
-        if score > 0:
-            scored_chunks.append((score, chunk))
-            
-    # Ordena por relevância
-    scored_chunks.sort(reverse=True)
-    
-    # Pegamos apenas nos 3 melhores pedaços, mas garantimos que não duplicamos frases parecidas
-    unique_chunks = []
-    for _, chunk in scored_chunks:
-        if chunk not in unique_chunks:
-            unique_chunks.append(chunk)
-        if len(unique_chunks) >= 3:
-            break
-            
-    context = " ".join(unique_chunks)
-    
-    # Se o contexto for muito gigante, cortamos para não quebrar o limite de tokens da IAedu
-    if len(context) > 1000:
-        context = context[:1000] + "..."
-    
-    is_valid = has_keyword or len(context) > 0
-    return context, is_valid
-
-# =====================================================================
-# ENDPOINT DE CHAT
-# =====================================================================
+    # Procura contexto relevante no ficheiro
+    contexto_encontrado = []
+    for linha in UA_KNOWLEDGE:
+        # Conta termos em comum
+        termos_comuns = sum(1 for palavra in q_low.split() if len(palavra) > 3 and palavra in linha.lower())
+        if termos_comuns > 0:
+            contexto_encontrado.append(linha)
+            if len(contexto_encontrado) >= 3: # Limita a 3 parágrafos para não estoirar
+                break
+                
+    return " ".join(contexto_encontrado), (it_is_ua or len(contexto_encontrado) > 0)
 
 @app.post("/chat")
 def chat(req: ChatRequest):
     user_message = req.message
     print(f"\n[USER]: {user_message}")
 
-    # 1. Aplicar o FILTRO/BRAKE em código antes de chamar a IA
-    context, is_valid_topic = get_context_and_verify(user_message)
+    # 1. CORRER O TRAVÃO IMMEDIATAMENTE
+    contexto, e_valido = verificar_e_filtrar(user_message)
     
-    if not is_valid_topic:
-        reply = "Lamento, mas como assistente oficial da Universidade de Aveiro, apenas posso responder a questões relacionadas com a UA (cursos, campus, serviços, etc.)."
-        chat_history.append({"role": "user", "text": user_message})
-        chat_history.append({"role": "assistant", "text": reply})
+    if not e_valido:
+        reply = "Lamento, mas sou um assistente exclusivo da Universidade de Aveiro. Não posso responder a assuntos externos como desporto, culinária ou generalidades."
         return {"response": reply}
 
-    # 2. Construir o Histórico
-    chat_history.append({"role": "user", "text": user_message})
-    history_text = "\n".join(f"{m['role']}: {m['text']}" for m in chat_history[-4:])
+    # 2. SE FOR VÁLIDO, PREPARA O PROMPT PARA A IAEDU
+    prompt = f"""És o assistente oficial da Universidade de Aveiro. Responde em português de forma clara.
+Se não souberes a resposta com base no contexto, usa o teu conhecimento geral sobre a Universidade de Aveiro.
 
-    # 3. Prompt de Sistema Blindado (System Prompt)
-    prompt = f"""[SYSTEM: És o assistente virtual exclusivo da Universidade de Aveiro (UA). 
-Responde de forma prestável e curta.
-REGRA ABSOLUTA: Se a pergunta não for sobre a UA, diz estritamente: 'Apenas posso responder a assuntos sobre a UA.']
+CONTEXTO INSTITUCIONAL:
+{contexto}
 
-[CONTEXTO INSTITUCIONAL]:
-{context}
-
-[HISTÓRICO RECENTE]:
-{history_text}
-
-[PERGUNTA DO ALUNO]:
+PERGUNTA:
 {user_message}"""
 
-    # Endpoint Streaming da IAedu
     endpoint = "https://api.iaedu.pt/agent-chat/api/v1/agent/cmamvd3n40000c801qeacoad2/stream"
-
+    
     form_data = {
         "channel_id": "cmqa0pde3aoy2nr01b2jnjlef",
         "thread_id": "local-thread-1",
@@ -118,52 +90,40 @@ REGRA ABSOLUTA: Se a pergunta não for sobre a UA, diz estritamente: 'Apenas pos
         "message": prompt
     }
 
-    headers = {
-        "x-api-key": IAEDU_API_KEY
-    }
+    headers = {"x-api-key": IAEDU_API_KEY}
 
     try:
-        # Nota: Corrigido o typo do '//' no teu URL original para '/'
-        response = requests.post(
-            endpoint,
-            data=form_data,
-            headers=headers,
-            stream=True,
-            timeout=15
-        )
-
+        # Fazemos o pedido normal (desativando o streaming complexo para maior estabilidade no Render)
+        response = requests.post(endpoint, data=form_data, headers=headers, timeout=20)
+        
         if response.status_code != 200:
-            print(f"Erro IAedu Status: {response.status_code}")
-            return {"response": "De momento não consegui contactar o sistema central da UA."}
+            print(f"Erro na API da IAedu. Código: {response.status_code}")
+            return {"response": "De momento estou com dificuldades em ligar-me ao servidor central da UA."}
 
+        # Vamos processar o texto completo retornado
         reply = ""
-        for line in response.iter_lines():
-            if not line:
-                continue
-            try:
-                decoded = line.decode("utf-8").strip()
-                if decoded.startswith("data:"):
-                    decoded = decoded.replace("data:", "").strip()
+        # Caso a API da IAedu envie várias linhas de dados no response (formato Server-Sent Events)
+        for line in response.text.split("\n"):
+            if line.startswith("data:"):
+                try:
+                    data_json = json.loads(line.replace("data:", "").strip())
+                    if data_json.get("type") == "token":
+                        reply += data_json.get("content", "")
+                    elif data_json.get("type") == "message":
+                        content = data_json.get("content", {})
+                        if isinstance(content, dict):
+                            reply = content.get("content", reply)
+                        else:
+                            reply = content
+                except:
+                    continue
 
-                data = json.loads(decoded)
-                
-                # Captura os tokens gerados por streaming
-                if data.get("type") == "token":
-                    reply += data.get("content", "")
-                elif data.get("type") == "message":
-                    content = data.get("content", {})
-                    reply = content.get("content", reply) if isinstance(content, dict) else content
-            except:
-                continue
-
-        # Fallback caso a API responda em branco
         if not reply.strip():
-            reply = "Não consegui processar uma resposta útil. Podes reformular?"
+            # Plano B: Se o parser falhar mas houver texto puro
+            reply = "Não consegui extrair a resposta estruturada da IAedu, mas a ligação foi estabelecida."
 
     except Exception as e:
-        print(f"Erro Fatal: {e}")
-        return {"response": "Ocorreu um erro interno no servidor."}
+        print(f"Erro fatal: {e}")
+        return {"response": "Ocorreu um erro interno ao processar a resposta."}
 
-    chat_history.append({"role": "assistant", "text": reply})
-    print(f"[ASSISTANT]: {reply}")
     return {"response": reply}
