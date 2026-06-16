@@ -9,7 +9,6 @@ type Message = {
 
 export default function App() {
   const [page, setPage] = useState<"home" | "chat">("home");
-
   const [message, setMessage] = useState("");
   const [chat, setChat] = useState<Message[]>([
     {
@@ -23,12 +22,12 @@ export default function App() {
   const [darkMode, setDarkMode] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  /* ================= SCROLL AUTOMÁTICO ================= */
+  /* SCROLL */
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chat]);
 
-  /* ================= ENVIO DE MENSAGEM ================= */
+  /* SEND MESSAGE */
   async function sendMessage(customMessage?: string) {
     const userMsg = customMessage ?? message;
 
@@ -61,32 +60,29 @@ export default function App() {
     } catch {
       setChat((prev) => [
         ...prev,
-        {
-          role: "bot",
-          text: "Erro ao ligar ao servidor.",
-        },
+        { role: "bot", text: "Erro ao ligar ao servidor." },
       ]);
     }
 
     setLoading(false);
   }
 
-  /* ================= HOME ================= */
+  /* HOME */
   if (page === "home") {
     return (
       <Home
-  onStart={() => setPage("chat")}
-  onSuggestionClick={(text) => {
-    setMessage(text);
-    setPage("chat");
-  }}
-  darkMode={darkMode}
-  setDarkMode={() => setDarkMode(!darkMode)}
-/>
+        onStart={() => setPage("chat")}
+        onSuggestionClick={(text) => {
+          setPage("chat");
+          sendMessage(text);
+        }}
+        darkMode={darkMode}
+        setDarkMode={() => setDarkMode(!darkMode)}
+      />
     );
   }
 
-  /* ================= CHAT ================= */
+  /* CHAT */
   return (
     <div className={`app ${darkMode ? "dark" : ""}`}>
 
@@ -120,9 +116,7 @@ export default function App() {
           </div>
         ))}
 
-        {loading && (
-          <div className="loading-text">A responder...</div>
-        )}
+        {loading && <div className="loading-text">A responder...</div>}
 
         <div ref={endRef} />
       </div>
@@ -133,9 +127,7 @@ export default function App() {
           <input
             value={message}
             onChange={(e) => setMessage(e.target.value)}
-            onKeyDown={(e) =>
-              e.key === "Enter" && sendMessage()
-            }
+            onKeyDown={(e) => e.key === "Enter" && sendMessage()}
             placeholder="Pergunta alguma coisa..."
           />
 
