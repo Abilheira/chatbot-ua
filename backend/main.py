@@ -20,7 +20,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
+IAEDU_API_KEY = os.getenv("IAEDU_API_KEY")
 
 
 class ChatRequest(BaseModel):
@@ -106,14 +106,11 @@ def health():
 def chat(req: ChatRequest):
     user_message = req.message
 
-    # guardar user
     chat_history.append({"role": "user", "text": user_message})
 
-    # criar histórico
     history_text = ""
     for msg in chat_history[-6:]:
         history_text += f"{msg['role']}: {msg['text']}\n"
-
 
     prompt = f"""
 És um assistente oficial da Universidade de Aveiro.
@@ -137,29 +134,30 @@ Pergunta atual:
 Responde de forma clara e útil.
 """
 
-    url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + OPENROUTER_API_KEY
+    endpoint = "https://api.iaedu.pt/agent-chat//api/v1/agent/cmamvd3n40000c801qeacoad2/stream"
 
-    payload = {
-        "contents": [
-            {
-                "parts": [{"text": prompt}]
-            }
-        ]
+    form_data = {
+        "channel_id": "cmqa0pde3aoy2nr01b2jnjlef",
+        "thread_id": "local-thread-1",
+        "user_info": "{}",
+        "message": prompt
     }
 
-    response = requests.post(url, json=payload)
+    headers = {
+        "x-api-key": IAEDU_API_KEY
+    }
+
+    response = requests.post(endpoint, data=form_data, headers=headers)
 
     print("STATUS:", response.status_code)
     print("TEXT:", response.text)
 
     try:
         data = response.json()
-        reply = data["candidates"][0]["content"]["parts"][0]["text"]
+        reply = data.get("response") or data.get("message") or "Sem resposta da IAEdu"
     except:
-        reply = "Erro ao gerar resposta."
+        reply = "Erro na resposta da IAEdu"
 
-
-    # guardar bot
     chat_history.append({"role": "assistant", "text": reply})
 
     return {"response": reply}
