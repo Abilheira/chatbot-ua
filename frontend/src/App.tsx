@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import "./App.css";
-import Home from "./home.tsx";
+import Home from "./Home";
 
 type Message = {
   role: "user" | "bot";
