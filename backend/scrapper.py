@@ -7,13 +7,34 @@ SITEMAP_URL = "https://www.ua.pt/sitemap.xml"
 def get_all_urls():
     print("🔄 A recolher links do sitemap da UA...")
     try:
-        r = requests.get(SITEMAP_URL, timeout=10)
+        headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
+        r = requests.get(SITEMAP_URL, headers=headers, timeout=10)
+        
+        # Tentamos ler como XML. Se falhar, tentamos como HTML normal
         soup = BeautifulSoup(r.text, "lxml-xml")
-        urls = [loc.text for loc in soup.find_all("loc") if "ua.pt" in loc.text]
-        return urls[:60]  # Limitamos a 60 páginas principais para não encher de lixo
+        urls = [loc.text.strip() for loc in soup.find_all("loc") if "ua.pt" in loc.text]
+        
+        if not urls:
+            # Segunda tentativa caso o XML venha disfarçado
+            soup = BeautifulSoup(r.text, "html.parser")
+            urls = [loc.text.strip() for loc in soup.find_all("loc") if "ua.pt" in loc.text]
+
+        if urls:
+            return urls[:60]
+            
     except Exception as e:
         print(f"Erro ao ler sitemap: {e}")
-        return []
+    
+    # 🔥 SE TUDO FALHAR: Links de emergência para o teu projeto funcionar já!
+    print("⚠️ Sitemap inacessível. A usar links principais da UA como alternativa...")
+    return [
+        "https://www.ua.pt/",
+        "https://www.ua.pt/pt/viver-a-ua",
+        "https://www.ua.pt/pt/cursos",
+        "https://www.ua.pt/pt/paco",
+        "https://www.ua.pt/pt/sasua",
+        "https://www.ua.pt/pt/servicos-academicos"
+    ]
 
 def scrape_page(url):
     try:
