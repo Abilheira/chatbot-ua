@@ -111,7 +111,7 @@ PERGUNTA:
 {user_message}
 """
 
-    endpoint = "https://api.iaedu.pt/agent-chat/api/v1/agent/cmamvd3n40000c801qeacoad2/stream"
+    endpoint = "https://api.iaedu.pt/agent-chat//api/v1/agent/cmamvd3n40000c801qeacoad2/stream"
 
     form_data = {
         "channel_id": "cmqa0pde3aoy2nr01b2jnjlef",
