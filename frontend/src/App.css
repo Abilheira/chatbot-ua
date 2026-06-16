@@ -1,10 +1,9 @@
 .app {
   font-family: 'Poppins', sans-serif;
-  height: 100vh;
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
   background: #e9e9e9;
-  overflow: hidden;
 }
 
 /* HEADER (no teu React é .topo) */
@@ -48,10 +47,14 @@
 
 .mensagem-bot {
   align-self: flex-start;
-  text-align: left;
+  background: white;
+  color: #333;
+  padding: 12px 16px;
+  border-radius: 18px 18px 18px 0;
+  max-width: 70%;
   display: flex;
   gap: 10px;
-  max-width: 70%;
+  align-items: center;
 }
 
 .logo-bot {
@@ -175,7 +178,6 @@
   display: flex;
   justify-content: space-between; /* 👈 isto resolve o "random" */
   align-items: center;
-  box-sizing: border-box;
 }
 
 .header-actions {
@@ -188,74 +190,4 @@
   border: none;
   font-size: 20px;
   cursor: pointer;
-}
-
-
-.home {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  background: #e9e9e9;
-}
-
-.welcome {
-  text-align: center;
-  margin-bottom: 30px;
-}
-
-.dashboard-area {
-  width: 100%;
-  max-width: 1100px;
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 25px;
-  margin-bottom: 30px;
-}
-
-.sugestoes-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 15px;
-  width: 100%;
-  justify-content: unset; 
-}
-
-.sugestao-card {
-  background: white;
-  padding: 20px;
-  border-radius: 15px;
-  cursor: pointer;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.08);
-  transition: 0.2s;
-}
-
-.sugestao-card:hover {
-  transform: translateY(-3px);
-}
-
-.atalhos-box {
-  background: white;
-  border-radius: 15px;
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin: 0 auto;
-}
-
-.atalho {
-  display: flex;
-  justify-content: space-between;
-  text-decoration: none;
-  color: #333;
-  padding: 8px 0;
-}
-
-.page-container {
-  width: 100%;
-  max-width: 1100px;
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  align-items: stretch; 
 }
