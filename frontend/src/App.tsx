@@ -61,17 +61,14 @@ export default function App() {
   }
 
   /* ===================== HOME ===================== */
-  
   if (page === "home") {
     return (
       <div className="page-container home">
 
-        {/* HEADER */}
         <div className="header">
           <img src="/logobranco.png" className="chatbot-image2" />
         </div>
 
-        {/* MAIN */}
         <div className="main">
 
           <img src="/chatbot2.png" className="chatbot-image" />
@@ -85,7 +82,6 @@ export default function App() {
           <div className="dashboard-area">
 
             <div className="sugestoes-container">
-
               <h3 className="sugestoes-titulo">Sugestões Populares</h3>
 
               <div className="sugestoes-grid">
@@ -161,7 +157,6 @@ export default function App() {
             </div>
           </div>
 
-          {/* BOTÃO COMEÇAR */}
           <button className="botao4" onClick={() => setPage("chat")}>
             Começar ➜
           </button>
@@ -173,7 +168,7 @@ export default function App() {
 
   /* ===================== CHAT ===================== */
   return (
-    <div className={`app page-container ${darkMode ? "dark" : ""}`}>
+    <div className={`app ${darkMode ? "dark" : ""}`}>
 
       {/* HEADER */}
       <div className="topo">
