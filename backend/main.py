@@ -8,8 +8,6 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-chat_history = []
-
 app = FastAPI()
 
 app.add_middleware(
@@ -22,12 +20,15 @@ app.add_middleware(
 
 IAEDU_API_KEY = os.getenv("IAEDU_API_KEY")
 
+chat_history = []
+
 
 class ChatRequest(BaseModel):
     message: str
-    
+
+
 # =========================
-# UA SCRAPING
+# UA SCRAPING (igual ao teu)
 # =========================
 
 SITEMAP_URL = "https://www.ua.pt/sitemap.xml"
@@ -36,14 +37,7 @@ def get_all_urls_from_sitemap():
     r = requests.get(SITEMAP_URL)
     soup = BeautifulSoup(r.text, "lxml-xml")
 
-    urls = []
-
-    for loc in soup.find_all("loc"):
-        url = loc.text
-        if "ua.pt" in url:
-            urls.append(url)
-
-    return urls
+    return [loc.text for loc in soup.find_all("loc") if "ua.pt" in loc.text]
 
 
 def scrape(url):
@@ -55,83 +49,63 @@ def scrape(url):
     for tag in soup(["script", "style", "nav", "footer", "header"]):
         tag.decompose()
 
-    text = soup.get_text(separator=" ", strip=True)
-    return text
+    return soup.get_text(separator=" ", strip=True)
 
 
-def build_ua_knowledge():
-    urls = get_all_urls_from_sitemap()
-
-    all_text = ""
-
-    for i, url in enumerate(urls[:200]):  # limita para não rebentar
-        print(f"Scraping {i+1}/{len(urls)}:", url)
-
-        try:
-            all_text += scrape(url) + " "
-        except:
-            continue
-
-    return all_text
-
-
-
+ua_text = ""
 print("🔄 Loading UA knowledge...")
-ua_text = build_ua_knowledge()
-print("✅ UA knowledge loaded")
+
+for i, url in enumerate(get_all_urls_from_sitemap()[:100]):
+    try:
+        ua_text += scrape(url) + " "
+    except:
+        pass
+
+print("✅ UA loaded")
+
 
 def get_context(query):
     chunks = ua_text.split(". ")
     scored = []
 
     for c in chunks:
-        score = sum(1 for w in query.lower().split() if len(w) > 2 and w in c.lower())
-
+        score = sum(
+            1 for w in query.lower().split()
+            if len(w) > 2 and w in c.lower()
+        )
         if score > 0:
             scored.append((score, c))
 
     scored.sort(reverse=True)
-
     return " ".join([c for _, c in scored[:8]])
 
 
-
-
-@app.get("/")
-def health():
-    return {"status": "ok"}
-
+# =========================
+# CHAT
+# =========================
 
 @app.post("/chat")
 def chat(req: ChatRequest):
     user_message = req.message
-
     chat_history.append({"role": "user", "text": user_message})
 
-    history_text = ""
-    for msg in chat_history[-6:]:
-        history_text += f"{msg['role']}: {msg['text']}\n"
+    history_text = "\n".join(
+        f"{m['role']}: {m['text']}" for m in chat_history[-6:]
+    )
 
     prompt = f"""
 És um assistente oficial da Universidade de Aveiro.
 
-HISTÓRICO DA CONVERSA:
+HISTÓRICO:
 {history_text}
-
-REGRAS IMPORTANTES:
-- Só respondes a perguntas relacionadas com a Universidade de Aveiro
-- Se a pergunta NÃO for sobre a UA, responde exatamente:
-  "Desculpa, só posso responder a questões relacionadas com a Universidade de Aveiro."
-
-Usa apenas a informação abaixo (site da UA):
 
 INFORMAÇÃO UA:
 {get_context(user_message)}
 
-Pergunta atual:
+PERGUNTA:
 {user_message}
 
-Responde de forma clara e útil.
+Responde de forma clara.
 """
 
     endpoint = "https://api.iaedu.pt/agent-chat//api/v1/agent/cmamvd3n40000c801qeacoad2/stream"
@@ -147,16 +121,31 @@ Responde de forma clara e útil.
         "x-api-key": IAEDU_API_KEY
     }
 
-    response = requests.post(endpoint, data=form_data, headers=headers)
+    response = requests.post(
+        endpoint,
+        data=form_data,
+        headers=headers,
+        stream=True
+    )
 
-    print("STATUS:", response.status_code)
-    print("TEXT:", response.text)
+    reply = ""
 
-    try:
-        data = response.json()
-        reply = data.get("response") or data.get("message") or "Sem resposta da IAEdu"
-    except:
-        reply = "Erro na resposta da IAEdu"
+    for line in response.iter_lines():
+        if not line:
+            continue
+
+        try:
+            import json
+            data = json.loads(line.decode("utf-8"))
+
+            if data.get("type") == "token":
+                reply += data.get("content", "")
+
+            elif data.get("type") == "message":
+                reply = data["content"]["content"]
+
+        except:
+            continue
 
     chat_history.append({"role": "assistant", "text": reply})
 
