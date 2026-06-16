@@ -10,6 +10,7 @@ type Message = {
 export default function App() {
   const [page, setPage] = useState<"home" | "chat">("home");
   const [message, setMessage] = useState("");
+
   const [chat, setChat] = useState<Message[]>([
     {
       role: "bot",
@@ -22,7 +23,7 @@ export default function App() {
   const [darkMode, setDarkMode] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  /* SCROLL */
+  /* SCROLL AUTOMÁTICO */
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chat]);
@@ -45,9 +46,7 @@ export default function App() {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({
-            message: userMsg,
-          }),
+          body: JSON.stringify({ message: userMsg }),
         }
       );
 
@@ -55,12 +54,18 @@ export default function App() {
 
       setChat((prev) => [
         ...prev,
-        { role: "bot", text: data.response },
+        {
+          role: "bot",
+          text: data.response, // mantém \n para CSS tratar
+        },
       ]);
     } catch {
       setChat((prev) => [
         ...prev,
-        { role: "bot", text: "Erro ao ligar ao servidor." },
+        {
+          role: "bot",
+          text: "Erro ao ligar ao servidor.",
+        },
       ]);
     }
 
@@ -74,7 +79,7 @@ export default function App() {
         onStart={() => setPage("chat")}
         onSuggestionClick={(text) => {
           setPage("chat");
-          sendMessage(text);
+          sendMessage(text); // envia logo a pergunta
         }}
         darkMode={darkMode}
         setDarkMode={() => setDarkMode(!darkMode)}
@@ -112,11 +117,17 @@ export default function App() {
             {msg.role === "bot" && (
               <img src="/chatbot2.png" className="logo-bot" />
             )}
-            <span>{msg.text}</span>
+
+            {/* IMPORTANTE: isto preserva quebras de linha */}
+            <div className="message-text">
+              {msg.text}
+            </div>
           </div>
         ))}
 
-        {loading && <div className="loading-text">A responder...</div>}
+        {loading && (
+          <div className="loading-text">A responder...</div>
+        )}
 
         <div ref={endRef} />
       </div>
