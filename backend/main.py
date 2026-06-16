@@ -5,6 +5,7 @@ import os
 import requests
 from dotenv import load_dotenv
 import json
+import re
 
 load_dotenv()
 
@@ -20,13 +21,10 @@ app.add_middleware(
 
 IAEDU_API_KEY = os.getenv("IAEDU_API_KEY")
 
-# 🚨 CLASSE CORRIGIDA (O que estava em falta e fez o Render crashar)
 class ChatRequest(BaseModel):
     message: str
 
-# =====================================================================
-# CONTEXTO DE EMERGÊNCIA (Hardcoded para garantir que o Render lê sempre)
-# =====================================================================
+# Contexto de Emergência Base
 UA_KNOWLEDGE = [
     "A Universidade de Aveiro (UA) localiza-se em Aveiro, no Campus Universitário de Santiago.",
     "Os cursos da UA incluem Engenharia Informática, Engenharia Eletrónica, Design, Gestão, Línguas, Biologia e Química.",
@@ -34,46 +32,48 @@ UA_KNOWLEDGE = [
     "O portal académico da Universidade de Aveiro chama-se PACO."
 ]
 
-# Tenta carregar o ficheiro extra se ele existir
 if os.path.exists("ua_conhecimento.txt"):
     try:
         with open("ua_conhecimento.txt", "r", encoding="utf-8") as f:
             linhas = [l.strip() for l in f.readlines() if len(l.strip()) > 10]
             if linhas:
                 UA_KNOWLEDGE.extend(linhas)
-        print(f"✅ Ficheiro lido. Total de frases: {len(UA_KNOWLEDGE)}")
+        print(f"✅ Ficheiro lido com sucesso. Total de frases: {len(UA_KNOWLEDGE)}")
     except Exception as e:
         print(f"Erro ao ler ficheiro: {e}")
 
 @app.post("/chat")
 def chat(req: ChatRequest):
     user_message = req.message
-    q_low = user_message.lower()
-
-    # 1. TRAVÃO RÍGIDO (Filtro por Palavras-Chave no Código)
-    palavras_chave = ["ua", "aveiro", "universidade", "paco", "sasua", "curso", "propina", "matrícula", "alojamento", "licenciatura", "mestrado", "estudante", "campus"]
     
-    # Se NÃO tem palavras da UA, bloqueia direto e dá a nega instantânea
-    if not any(p in q_low for p in palavras_chave):
-        return {"response": "Lamento, mas sou um assistente exclusivo da Universidade de Aveiro. Não posso responder a assuntos externos (como o Benfica, culinária ou outros temas)."}
+    # Limpa o texto e separa por palavras exatas usando Regex
+    words = set(re.findall(r'\b\w+\b', user_message.lower()))
 
-    # 2. CAPTURAR CONTEXTO
+    # 1. TRAVÃO RÍGIDO (Filtro por Palavras EXATAS no Código)
+    palavras_chave = {"ua", "aveiro", "universidade", "paco", "sasua", "curso", "cursos", "propina", "propinas", "matrícula", "matriculas", "alojamento", "licenciatura", "mestrado", "estudante", "campus"}
+    
+    # Se nenhuma palavra exata da pergunta bater com as palavras-chave da UA, bloqueia na hora!
+    if not words.intersection(palavras_chave):
+        return {"response": "Lamento, mas sou um assistente exclusivo da Universidade de Aveiro. Não posso responder a assuntos externos como futebol, culinária ou generalidades."}
+
+    # 2. CAPTURAR CONTEXTO RELEVANTE
     contexto_linhas = []
     for linha in UA_KNOWLEDGE:
-        if any(palavra in linha.lower() for palavra in q_low.split() if len(palavra) > 3):
+        linha_low = linha.lower()
+        if any(w in linha_low for w in words if len(w) > 3):
             contexto_linhas.append(linha)
             if len(contexto_linhas) >= 3:
                 break
     
     contexto = " ".join(contexto_linhas) if contexto_linhas else "Informações gerais sobre a UA."
 
-    # 3. PREPARAR PEDIDO
-    prompt = f"És o assistente da Universidade de Aveiro. Responde sobre isto: {user_message}. Contexto: {contexto}"
+    # 3. PREPARAR PEDIDO PARA A FCT
+    prompt = f"És o assistente oficial da Universidade de Aveiro. Responde estritamente sobre temas da universidade. Pergunta: {user_message}. Contexto: {contexto}"
     
     endpoint = "https://api.iaedu.pt/agent-chat/api/v1/agent/cmamvd3n40000c801qeacoad2/stream"
     form_data = {
         "channel_id": "cmqa0pde3aoy2nr01b2jnjlef",
-        "thread_id": "local-thread-unique-123",
+        "thread_id": "local-thread-unique-124",
         "user_info": "{}",
         "message": prompt
     }
@@ -83,29 +83,37 @@ def chat(req: ChatRequest):
         response = requests.post(endpoint, data=form_data, headers=headers, timeout=25)
         
         if response.status_code != 200:
-            return {"response": f"Erro na API da IAedu (Código {response.status_code}). Verifica a tua API Key no Render!"}
+            return {"response": f"Erro na API da IAedu (Código {response.status_code})."}
 
         raw_text = response.text
         reply = ""
         
-        # Processa os dados retornados
+        # 🔥 NOVO PARSER ADAPTADO: Lida com JSON puro por linha (sem a tag "data:")
         for line in raw_text.split("\n"):
-            if "data:" in line:
-                try:
-                    clean_line = line.replace("data:", "").strip()
-                    data_json = json.loads(clean_line)
-                    if data_json.get("type") == "token":
-                        reply += data_json.get("content", "")
-                    elif data_json.get("type") == "message":
-                        content = data_json.get("content", {})
-                        reply = content.get("content", reply) if isinstance(content, dict) else content
-                except:
-                    continue
+            line = line.strip()
+            if not line:
+                continue
+                
+            try:
+                # Se a linha ainda contiver "data:", removemos por segurança
+                if line.startswith("data:"):
+                    line = line.replace("data:", "").strip()
+                    
+                data_json = json.loads(line)
+                
+                # Agrupa os tokens do texto gerado
+                if data_json.get("type") == "token":
+                    reply += data_json.get("content", "")
+                elif data_json.get("type") == "message":
+                    content = data_json.get("content", {})
+                    reply = content.get("content", reply) if isinstance(content, dict) else content
+            except:
+                continue
 
         if not reply.strip():
-            return {"response": f"A API respondeu mas o formato mudou. Resposta crua da FCT: {raw_text[:200]}"}
+            return {"response": "A API processou o pedido mas devolveu uma resposta vazia. Tenta reformular a tua questão."}
 
         return {"response": reply}
 
     except Exception as e:
-        return {"response": f"Erro fatal no servidor do Render: {str(e)}"}
+        return {"response": f"Erro ao comunicar com o servidor: {str(e)}"}
