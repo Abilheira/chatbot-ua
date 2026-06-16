@@ -61,9 +61,10 @@ export default function App() {
   }
 
   /* ===================== HOME ===================== */
+  
   if (page === "home") {
     return (
-      <div className="home">
+      <div className="page-container home">
 
         {/* HEADER */}
         <div className="header">
@@ -172,7 +173,7 @@ export default function App() {
 
   /* ===================== CHAT ===================== */
   return (
-    <div className={`app ${darkMode ? "dark" : ""}`}>
+    <div className={`app page-container ${darkMode ? "dark" : ""}`}>
 
       {/* HEADER */}
       <div className="topo">
