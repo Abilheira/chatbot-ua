@@ -75,12 +75,14 @@ export default function App() {
   if (page === "home") {
     return (
       <Home
-        onStart={() => setPage("chat")}
-        onSuggestionClick={(text) => {
-          setPage("chat");
-          sendMessage(text); // 🔥 envia logo a sugestão
-        }}
-      />
+  onStart={() => setPage("chat")}
+  onSuggestionClick={(text) => {
+    setMessage(text);
+    setPage("chat");
+  }}
+  darkMode={darkMode}
+  setDarkMode={() => setDarkMode(!darkMode)}
+/>
     );
   }
 
