@@ -23,43 +23,43 @@ IAEDU_API_KEY = os.getenv("IAEDU_API_KEY")
 
 chat_history = []
 
-
 class ChatRequest(BaseModel):
     message: str
 
 
 # =========================
-# UA SCRAPING (igual ao teu)
+# UA SCRAPING (simples e estável)
 # =========================
 
 SITEMAP_URL = "https://www.ua.pt/sitemap.xml"
 
 def get_all_urls_from_sitemap():
-    r = requests.get(SITEMAP_URL)
-    soup = BeautifulSoup(r.text, "lxml-xml")
-    return [loc.text for loc in soup.find_all("loc") if "ua.pt" in loc.text]
-
+    try:
+        r = requests.get(SITEMAP_URL, timeout=10)
+        soup = BeautifulSoup(r.text, "lxml-xml")
+        return [loc.text for loc in soup.find_all("loc") if "ua.pt" in loc.text]
+    except:
+        return []
 
 def scrape(url):
-    headers = {"User-Agent": "Mozilla/5.0"}
-    r = requests.get(url, headers=headers, timeout=10)
+    try:
+        headers = {"User-Agent": "Mozilla/5.0"}
+        r = requests.get(url, headers=headers, timeout=8)
 
-    soup = BeautifulSoup(r.text, "html.parser")
+        soup = BeautifulSoup(r.text, "html.parser")
 
-    for tag in soup(["script", "style", "nav", "footer", "header"]):
-        tag.decompose()
+        for tag in soup(["script", "style", "nav", "footer", "header"]):
+            tag.decompose()
 
-    return soup.get_text(separator=" ", strip=True)
+        return soup.get_text(separator=" ", strip=True)
+    except:
+        return ""
 
-
-ua_text = ""
 print("🔄 Loading UA knowledge...")
 
-for url in get_all_urls_from_sitemap()[:100]:
-    try:
-        ua_text += scrape(url) + " "
-    except:
-        pass
+ua_text = ""
+for url in get_all_urls_from_sitemap()[:80]:
+    ua_text += scrape(url) + " "
 
 print("✅ UA loaded")
 
@@ -77,7 +77,7 @@ def get_context(query):
             scored.append((score, c))
 
     scored.sort(reverse=True)
-    return " ".join([c for _, c in scored[:8]])
+    return " ".join([c for _, c in scored[:6]])
 
 
 # =========================
@@ -86,6 +86,7 @@ def get_context(query):
 
 @app.post("/chat")
 def chat(req: ChatRequest):
+
     user_message = req.message
     chat_history.append({"role": "user", "text": user_message})
 
@@ -96,17 +97,21 @@ def chat(req: ChatRequest):
     prompt = f"""
 És um assistente oficial da Universidade de Aveiro.
 
+REGRAS:
+- Só respondes sobre a Universidade de Aveiro
+- Se não for sobre a UA, recusa educadamente
+
 HISTÓRICO:
 {history_text}
 
-INFORMAÇÃO UA:
+CONTEXT:
 {get_context(user_message)}
 
-Pergunta:
+PERGUNTA:
 {user_message}
 """
 
-    endpoint = "https://api.iaedu.pt/agent-chat//api/v1/agent/cmamvd3n40000c801qeacoad2/stream"
+    endpoint = "https://api.iaedu.pt/agent-chat/api/v1/agent/cmamvd3n40000c801qeacoad2/stream"
 
     form_data = {
         "channel_id": "cmqa0pde3aoy2nr01b2jnjlef",
@@ -119,34 +124,50 @@ Pergunta:
         "x-api-key": IAEDU_API_KEY
     }
 
-    response = requests.post(
-        endpoint,
-        data=form_data,
-        headers=headers,
-        stream=True
-    )
+    try:
+        response = requests.post(
+            endpoint,
+            data=form_data,
+            headers=headers,
+            stream=True,
+            timeout=60
+        )
 
-    reply = ""
+        print("STATUS IA:", response.status_code)
 
-    # 🔥 STREAM CORRETO
-    for line in response.iter_lines():
-        if not line:
-            continue
+        if response.status_code != 200:
+            print("ERRO IA:", response.text)
+            return {"response": "Erro ao contactar IA."}
 
-        try:
-            data = json.loads(line.decode("utf-8"))
+        reply = ""
 
-            if data.get("type") == "token":
-                reply += data.get("content", "")
+        for line in response.iter_lines():
+            if not line:
+                continue
 
-            elif data.get("type") == "message":
-                reply = data.get("content", {}).get("content", reply)
+            try:
+                decoded = line.decode("utf-8").strip()
 
-        except:
-            continue
+                if decoded.startswith("data:"):
+                    decoded = decoded.replace("data:", "").strip()
 
-    if not reply:
-        reply = "Erro ao gerar resposta."
+                data = json.loads(decoded)
+
+                if data.get("type") == "token":
+                    reply += data.get("content", "")
+
+                elif data.get("type") == "message":
+                    reply = data.get("content", {}).get("content", reply)
+
+            except:
+                continue
+
+        if not reply:
+            reply = "Erro ao gerar resposta."
+
+    except Exception as e:
+        print("FATAL ERROR:", e)
+        return {"response": "Erro interno do servidor."}
 
     chat_history.append({"role": "assistant", "text": reply})
 
