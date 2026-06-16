@@ -3,6 +3,7 @@
   display: flex;
   flex-direction: column;
   background: #e9e9e9;
+  color: #111; /* 🔥 FIX PRINCIPAL */
 }
 
 /* HEADER */
@@ -45,6 +46,7 @@
 
 .home-section h2 {
   margin-bottom: 15px;
+  color: #111;
 }
 
 /* SUGESTÕES */
@@ -61,6 +63,8 @@
   border-radius: 12px;
   cursor: pointer;
   text-align: left;
+
+  color: #111; /* 🔥 SEM ISTO FICA BRANCO OU INVISÍVEL */
 }
 
 /* ATALHOS */
@@ -75,7 +79,8 @@
   padding: 12px;
   border-radius: 10px;
   text-decoration: none;
-  color: black;
+  color: #111; /* 🔥 obrigatório */
+  display: block;
 }
 
 /* BOTÃO */
