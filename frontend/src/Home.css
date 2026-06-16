@@ -27,6 +27,10 @@
   color: white;
 }
 
+.home.dark h2 {
+  color: white;
+}
+
 /* HEADER */
 .home-header {
    width: 100%;
