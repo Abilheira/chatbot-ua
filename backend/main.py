@@ -1,7 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from bs4 import BeautifulSoup
 import os
 import requests
 from dotenv import load_dotenv
@@ -20,104 +19,89 @@ app.add_middleware(
 )
 
 IAEDU_API_KEY = os.getenv("IAEDU_API_KEY")
-
 chat_history = []
-
 
 class ChatRequest(BaseModel):
     message: str
 
+# =====================================================================
+# BASE DE CONHECIMENTO (Simulada para estabilidade, expande conforme precisares)
+# =====================================================================
+# Em vez de fazeres scrape a 80 páginas todas as vezes que o servidor inicia,
+# o ideal é guardares o texto num ficheiro .txt ou JSON local e lê-lo aqui.
+UA_KNOWLEDGE = [
+    "A Universidade de Aveiro (UA) é uma fundação pública com regime de direito privado.",
+    "Os serviços de ação social da UA (SASUA) gerem os alojamentos e cantinas universitárias.",
+    "A UA oferece licenciaturas, mestrados e doutoramentos em áreas como Engenharia, Ciências e Artes.",
+    "O campus principal da Universidade de Aveiro localiza-se em Santiago, Aveiro.",
+    "As inscrições e matrículas na UA são feitas através do portal académico PACO."
+]
 
-# =========================
-# UA SCRAPING
-# =========================
-
-SITEMAP_URL = "https://www.ua.pt/sitemap.xml"
-
-
-def get_all_urls_from_sitemap():
-    try:
-        r = requests.get(SITEMAP_URL, timeout=10)
-        soup = BeautifulSoup(r.text, "lxml-xml")
-        return [loc.text for loc in soup.find_all("loc") if "ua.pt" in loc.text]
-    except:
-        return []
-
-
-def scrape(url):
-    try:
-        headers = {"User-Agent": "Mozilla/5.0"}
-        r = requests.get(url, headers=headers, timeout=8)
-
-        soup = BeautifulSoup(r.text, "html.parser")
-
-        for tag in soup(["script", "style", "nav", "footer", "header"]):
-            tag.decompose()
-
-        return soup.get_text(separator=" ", strip=True)
-    except:
-        return ""
-
-
-print("🔄 Loading UA knowledge...")
-
-ua_text = ""
-for url in get_all_urls_from_sitemap()[:80]:
-    ua_text += scrape(url) + " "
-
-print("✅ UA loaded")
-
-
-def get_context(query):
-    chunks = ua_text.split(". ")
-    scored = []
-
-    for c in chunks:
-        score = sum(
-            1 for w in query.lower().split()
-            if len(w) > 2 and w in c.lower()
-        )
+def get_context_and_verify(query: str):
+    """
+    Procura contexto relevante e valida se a pergunta está minimamente 
+    relacionada com o universo da Universidade de Aveiro.
+    """
+    query_lower = query.lower()
+    
+    # Palavras-chave obrigatórias para contextualização
+    ua_keywords = ["ua", "aveiro", "universidade", "paco", "sasua", "campus", "curso", "propina", "matrícula", "alojamento"]
+    
+    # Se a pergunta for curta e não tiver contexto da UA, podemos filtrar logo
+    has_keyword = any(keyword in query_lower for keyword in ua_keywords)
+    
+    scored_chunks = []
+    for chunk in UA_KNOWLEDGE:
+        # Relevância baseada em termos partilhados
+        score = sum(1 for word in query_lower.split() if len(word) > 3 and word in chunk.lower())
         if score > 0:
-            scored.append((score, c))
+            scored_chunks.append((score, chunk))
+            
+    scored_chunks.sort(reverse=True)
+    context = " ".join([chunk for _, chunk in scored_chunks[:3]])
+    
+    # Retorna o contexto e um booleano a dizer se a pergunta é válida
+    is_valid = has_keyword or len(context) > 0
+    return context, is_valid
 
-    scored.sort(reverse=True)
-    return " ".join([c for _, c in scored[:6]])
-
-
-# =========================
-# CHAT
-# =========================
+# =====================================================================
+# ENDPOINT DE CHAT
+# =====================================================================
 
 @app.post("/chat")
 def chat(req: ChatRequest):
-
     user_message = req.message
-    print("\nUSER:", user_message)
+    print(f"\n[USER]: {user_message}")
 
+    # 1. Aplicar o FILTRO/BRAKE em código antes de chamar a IA
+    context, is_valid_topic = get_context_and_verify(user_message)
+    
+    if not is_valid_topic:
+        reply = "Lamento, mas como assistente oficial da Universidade de Aveiro, apenas posso responder a questões relacionadas com a UA (cursos, campus, serviços, etc.)."
+        chat_history.append({"role": "user", "text": user_message})
+        chat_history.append({"role": "assistant", "text": reply})
+        return {"response": reply}
+
+    # 2. Construir o Histórico
     chat_history.append({"role": "user", "text": user_message})
+    history_text = "\n".join(f"{m['role']}: {m['text']}" for m in chat_history[-4:])
 
-    history_text = "\n".join(
-        f"{m['role']}: {m['text']}" for m in chat_history[-6:]
-    )
+    # 3. Prompt de Sistema Blindado (System Prompt)
+    prompt = f"""[SYSTEM: És o assistente virtual exclusivo da Universidade de Aveiro (UA). 
+Responde de forma prestável e curta.
+REGRA ABSOLUTA: Se a pergunta não for sobre a UA, diz estritamente: 'Apenas posso responder a assuntos sobre a UA.']
 
-    prompt = f"""
-És um assistente oficial da Universidade de Aveiro.
+[CONTEXTO INSTITUCIONAL]:
+{context}
 
-REGRAS:
-- Só respondes sobre a Universidade de Aveiro
-- Se não for sobre a UA, recusa educadamente
-
-HISTÓRICO:
+[HISTÓRICO RECENTE]:
 {history_text}
 
-CONTEXT:
-{get_context(user_message)}
+[PERGUNTA DO ALUNO]:
+{user_message}"""
 
-PERGUNTA:
-{user_message}
-"""
-
-    endpoint = "https://api.iaedu.pt/agent-chat//api/v1/agent/cmamvd3n40000c801qeacoad2/stream"
+    # Endpoint Streaming da IAedu
+    endpoint = "https://api.iaedu.pt/agent-chat/api/v1/agent/cmamvd3n40000c801qeacoad2/stream"
 
     form_data = {
         "channel_id": "cmqa0pde3aoy2nr01b2jnjlef",
@@ -131,57 +115,47 @@ PERGUNTA:
     }
 
     try:
+        # Nota: Corrigido o typo do '//' no teu URL original para '/'
         response = requests.post(
             endpoint,
             data=form_data,
             headers=headers,
             stream=True,
-            timeout=60
+            timeout=15
         )
 
-        print("STATUS IA:", response.status_code)
-
         if response.status_code != 200:
-            print("ERRO IA:", response.text)
-            return {"response": "Erro ao contactar IA."}
+            print(f"Erro IAedu Status: {response.status_code}")
+            return {"response": "De momento não consegui contactar o sistema central da UA."}
 
         reply = ""
-
         for line in response.iter_lines():
             if not line:
                 continue
-
             try:
                 decoded = line.decode("utf-8").strip()
-
                 if decoded.startswith("data:"):
                     decoded = decoded.replace("data:", "").strip()
 
                 data = json.loads(decoded)
-
+                
+                # Captura os tokens gerados por streaming
                 if data.get("type") == "token":
                     reply += data.get("content", "")
-
                 elif data.get("type") == "message":
                     content = data.get("content", {})
-                    if isinstance(content, dict):
-                        reply = content.get("content", reply)
-                    else:
-                        reply = content
-
-            except Exception as e:
-                print("PARSE ERROR:", e)
+                    reply = content.get("content", reply) if isinstance(content, dict) else content
+            except:
                 continue
 
-        print("FINAL REPLY:", reply)
-
-        if not reply:
-            reply = "Erro ao gerar resposta."
+        # Fallback caso a API responda em branco
+        if not reply.strip():
+            reply = "Não consegui processar uma resposta útil. Podes reformular?"
 
     except Exception as e:
-        print("FATAL ERROR:", e)
-        return {"response": "Erro interno do servidor."}
+        print(f"Erro Fatal: {e}")
+        return {"response": "Ocorreu um erro interno no servidor."}
 
     chat_history.append({"role": "assistant", "text": reply})
-
+    print(f"[ASSISTANT]: {reply}")
     return {"response": reply}
