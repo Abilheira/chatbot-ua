@@ -20,7 +20,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-IAEDU_API_KEY = os.getenv("IAEDU_API_KEY")
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 
 
 class ChatRequest(BaseModel):
@@ -137,7 +137,7 @@ Pergunta atual:
 Responde de forma clara e útil.
 """
 
-    url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + IAEDU_API_KEY
+    url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + OPENROUTER_API_KEY
 
     payload = {
         "contents": [
