@@ -38,29 +38,37 @@ UA_KNOWLEDGE = [
 ]
 
 def get_context_and_verify(query: str):
-    """
-    Procura contexto relevante e valida se a pergunta está minimamente 
-    relacionada com o universo da Universidade de Aveiro.
-    """
     query_lower = query.lower()
     
-    # Palavras-chave obrigatórias para contextualização
-    ua_keywords = ["ua", "aveiro", "universidade", "paco", "sasua", "campus", "curso", "propina", "matrícula", "alojamento"]
+    # Palavras-chave obrigatórias para o "Brake" (Filtro)
+    ua_keywords = ["ua", "aveiro", "universidade", "paco", "sasua", "campus", "curso", "propina", "matrícula", "alojamento", "licenciatura", "mestrado"]
     
-    # Se a pergunta for curta e não tiver contexto da UA, podemos filtrar logo
     has_keyword = any(keyword in query_lower for keyword in ua_keywords)
     
     scored_chunks = []
     for chunk in UA_KNOWLEDGE:
-        # Relevância baseada em termos partilhados
+        # Pontuação baseada em palavras exatas para evitar lixo
         score = sum(1 for word in query_lower.split() if len(word) > 3 and word in chunk.lower())
         if score > 0:
             scored_chunks.append((score, chunk))
             
+    # Ordena por relevância
     scored_chunks.sort(reverse=True)
-    context = " ".join([chunk for _, chunk in scored_chunks[:3]])
     
-    # Retorna o contexto e um booleano a dizer se a pergunta é válida
+    # Pegamos apenas nos 3 melhores pedaços, mas garantimos que não duplicamos frases parecidas
+    unique_chunks = []
+    for _, chunk in scored_chunks:
+        if chunk not in unique_chunks:
+            unique_chunks.append(chunk)
+        if len(unique_chunks) >= 3:
+            break
+            
+    context = " ".join(unique_chunks)
+    
+    # Se o contexto for muito gigante, cortamos para não quebrar o limite de tokens da IAedu
+    if len(context) > 1000:
+        context = context[:1000] + "..."
+    
     is_valid = has_keyword or len(context) > 0
     return context, is_valid
 
