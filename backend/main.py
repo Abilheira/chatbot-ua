@@ -20,7 +20,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+IAEDU_API_KEY = os.getenv("IAEDU_API_KEY")
 
 
 class ChatRequest(BaseModel):
