@@ -1,0 +1,90 @@
+.home {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #e9e9e9;
+}
+
+/* HEADER */
+.home-header {
+  background: #55b51f;
+  padding: 15px 40px;
+}
+
+.home-logo {
+  width: 160px;
+}
+
+/* MAIN */
+.home-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 30px 20px;
+  text-align: center;
+}
+
+.home-bot {
+  width: 150px;
+  margin-bottom: 10px;
+}
+
+.home-main h1 {
+  color: #55b51f;
+  font-size: 30px;
+  margin-bottom: 25px;
+}
+
+/* SECTIONS */
+.home-section {
+  width: 100%;
+  max-width: 900px;
+  margin-bottom: 25px;
+}
+
+.home-section h2 {
+  margin-bottom: 15px;
+}
+
+/* SUGESTÕES */
+.suggestions {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.suggestions button {
+  background: white;
+  border: none;
+  padding: 15px;
+  border-radius: 12px;
+  cursor: pointer;
+  text-align: left;
+}
+
+/* ATALHOS */
+.shortcuts {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.shortcuts a {
+  background: white;
+  padding: 12px;
+  border-radius: 10px;
+  text-decoration: none;
+  color: black;
+}
+
+/* BOTÃO */
+.start-btn {
+  margin-top: 20px;
+  background: #55b51f;
+  color: white;
+  border: none;
+  padding: 12px 25px;
+  border-radius: 25px;
+  cursor: pointer;
+}
