@@ -50,7 +50,20 @@ def chat(req: ChatRequest):
     words = set(re.findall(r'\b\w+\b', user_message.lower()))
 
     # 1. TRAVÃO RÍGIDO (Filtro por Palavras EXATAS no Código)
-    palavras_chave = {"ua", "aveiro", "universidade", "paco", "sasua", "curso", "cursos", "propina", "propinas", "matrícula", "matriculas", "alojamento", "licenciatura", "mestrado", "estudante", "campus"}
+    # Expandido para aceitar todas as tuas sugestões da Home e temas académicos
+    palavras_chave = {
+        # Identificadores da instituição
+        "ua", "aveiro", "universidade", "paco", "sasua", "campus",
+        
+        # Inscrições e Cursos
+        "curso", "cursos", "matrícula", "matriculas", "matricular", "licenciatura", "mestrado", "estudante",
+        
+        # Calendário e Horários
+        "aula", "aulas", "horário", "horarios", "calendário", "calendario", "começam", "comecam",
+        
+        # Propinas e Pagamentos (O que faltava para a tua sugestão!)
+        "pagamento", "pagamentos", "prazos", "prazo", "propina", "propinas", "pagar", "valores", "fatura"
+    }
     
     # Se nenhuma palavra exata da pergunta bater com as palavras-chave da UA, bloqueia na hora!
     if not words.intersection(palavras_chave):
@@ -67,8 +80,8 @@ def chat(req: ChatRequest):
     
     contexto = " ".join(contexto_linhas) if contexto_linhas else "Informações gerais sobre a UA."
 
-    # 3. PREPARAR PEDIDO PARA A FCT
-    prompt = f"És o assistente oficial da Universidade de Aveiro. Responde estritamente sobre temas da universidade. Pergunta: {user_message}. Contexto: {contexto}"
+    # Adicionamos "da Universidade de Aveiro" logo no início da pergunta para contextualizar a IA
+    prompt = f"És o assistente oficial da Universidade de Aveiro. Responde estritamente sobre temas da universidade. Pergunta do aluno sobre a UA: {user_message}. Contexto extraído do site: {contexto}"
     
     endpoint = "https://api.iaedu.pt/agent-chat/api/v1/agent/cmamvd3n40000c801qeacoad2/stream"
     form_data = {
