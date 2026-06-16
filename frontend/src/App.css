@@ -192,7 +192,7 @@
   cursor: pointer;
 }
 
-.chatbot-image {
-  width: 180px;
-  height: auto;
+html, body, #root {
+  height: 100%;
+  margin: 0;
 }
