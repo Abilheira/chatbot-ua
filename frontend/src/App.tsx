@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, } from "react";
 import "./App.css";
 
 type Message = {
@@ -18,20 +18,7 @@ export default function App() {
   const endRef = useRef<HTMLDivElement | null>(null);
 
   const [darkMode, setDarkMode] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [ttsEnabled, setTtsEnabled] = useState(true);
-
-  
-  useEffect(() => {
-    if (!ttsEnabled) {
-      window.speechSynthesis.cancel();
-    }
-  }, [ttsEnabled]);
-
-
-  useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [chat]);
+  const [loading, setLoading] = useState(false)
 
 
   async function sendMessage() {
@@ -63,9 +50,6 @@ export default function App() {
         text: data.response,
       },
     ]);
-    setTimeout(() => {
-  speak(data.response);
-}, 100);
 
   } catch (error) {
     setChat((prev) => [
@@ -77,19 +61,6 @@ export default function App() {
     ]);
   }
   setLoading(false);
-}
-
-function speak(text: string) {
-  if (!ttsEnabled) return; // 👈 isto é o toggle
-
-  window.speechSynthesis.cancel();
-
-  const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = "pt-PT";
-  utterance.rate = 1;
-  utterance.pitch = 1;
-
-  window.speechSynthesis.speak(utterance);
 }
 
 
@@ -109,9 +80,6 @@ function speak(text: string) {
       {darkMode ? "☀️" : "🌙"}
     </button>
 
-    <button onClick={() => setTtsEnabled(!ttsEnabled)} className="icon-btn">
-      {ttsEnabled ? "🔊" : "🔇"}
-    </button>
   </div>
 </div>
 
