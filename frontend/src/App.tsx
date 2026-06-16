@@ -26,6 +26,11 @@ export default function App() {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chat]);
 
+  function openChatWithQuestion(question: string) {
+    setPage("chat");
+    setMessage(question);
+  }
+
   async function sendMessage() {
     if (!message.trim()) return;
 
@@ -44,10 +49,7 @@ export default function App() {
 
       const data = await response.json();
 
-      setChat((prev) => [
-        ...prev,
-        { role: "bot", text: data.response },
-      ]);
+      setChat((prev) => [...prev, { role: "bot", text: data.response }]);
     } catch {
       setChat((prev) => [
         ...prev,
@@ -63,23 +65,107 @@ export default function App() {
     return (
       <div className="home">
 
+        {/* HEADER */}
         <div className="header">
           <img src="/logobranco.png" className="chatbot-image2" />
         </div>
 
+        {/* MAIN */}
         <div className="main">
+
           <img src="/chatbot2.png" className="chatbot-image" />
 
-          <h2>Olá! Tira as tuas dúvidas comigo :)</h2>
+          <h2>
+            Olá! Tira as tuas<br />
+            dúvidas comigo :)
+          </h2>
 
-          <button
-            className="botao4"
-            onClick={() => setPage("chat")}
-          >
+          {/* SUGESTÕES */}
+          <div className="dashboard-area">
+
+            <div className="sugestoes-container">
+
+              <h3 className="sugestoes-titulo">Sugestões Populares</h3>
+
+              <div className="sugestoes-grid">
+
+                <div className="sugestao-card" onClick={() =>
+                  openChatWithQuestion("Como faço a minha matrícula?")
+                }>
+                  🎓 <p>Como faço a minha matrícula?</p>
+                </div>
+
+                <div className="sugestao-card" onClick={() =>
+                  openChatWithQuestion("Quando começam as aulas?")
+                }>
+                  📅 <p>Quando começam as aulas?</p>
+                </div>
+
+                <div className="sugestao-card" onClick={() =>
+                  openChatWithQuestion("Como consultar o meu horário?")
+                }>
+                  ⏰ <p>Consultar horário</p>
+                </div>
+
+                <div className="sugestao-card" onClick={() =>
+                  openChatWithQuestion("Quais são os prazos de pagamento?")
+                }>
+                  📄 <p>Prazos de pagamento</p>
+                </div>
+
+                <div className="sugestao-card" onClick={() =>
+                  openChatWithQuestion("Como pedir uma declaração?")
+                }>
+                  🧾 <p>Pedir declaração</p>
+                </div>
+
+                <div className="sugestao-card" onClick={() =>
+                  openChatWithQuestion("Como pedir estatuto de trabalhador-estudante?")
+                }>
+                  🎓 <p>Trabalhador-estudante</p>
+                </div>
+
+              </div>
+            </div>
+
+          </div>
+
+          {/* ATALHOS */}
+          <div className="atalhos-container">
+
+            <h3 className="atalhos-titulo">Atalhos Rápidos</h3>
+
+            <div className="atalhos-box">
+
+              <a className="atalho" href="https://paco.ua.pt/" target="_blank">
+                📚 <span>Portal Académico</span>
+              </a>
+
+              <a className="atalho" href="https://www.ua.pt/pt/sga/page/4618" target="_blank">
+                📅 <span>Calendário Académico</span>
+              </a>
+
+              <a className="atalho" href="https://elearning.ua.pt/" target="_blank">
+                📖 <span>E-Learning</span>
+              </a>
+
+              <a className="atalho" href="https://www.ua.pt/pt/contactos-gerais" target="_blank">
+                📞 <span>Contactos UA</span>
+              </a>
+
+              <a className="atalho" href="https://cantinas.pt/" target="_blank">
+                🍔 <span>Ementas Cantinas</span>
+              </a>
+
+            </div>
+          </div>
+
+          {/* BOTÃO COMEÇAR */}
+          <button className="botao4" onClick={() => setPage("chat")}>
             Começar ➜
           </button>
-        </div>
 
+        </div>
       </div>
     );
   }
@@ -96,17 +182,16 @@ export default function App() {
         </button>
 
         <div className="header-actions">
-          <button
-            onClick={() => setDarkMode(!darkMode)}
-            className="icon-btn"
-          >
+          <button onClick={() => setDarkMode(!darkMode)} className="icon-btn">
             {darkMode ? "☀️" : "🌙"}
           </button>
         </div>
+
       </div>
 
       {/* CHAT */}
       <div className="chat-container">
+
         {chat.map((msg, i) => (
           <div
             key={i}
@@ -119,9 +204,7 @@ export default function App() {
           </div>
         ))}
 
-        {loading && (
-          <div className="loading-text">A responder...</div>
-        )}
+        {loading && <div className="loading-text">A responder...</div>}
 
         <div ref={endRef} />
       </div>
@@ -129,6 +212,7 @@ export default function App() {
       {/* INPUT */}
       <div className="area-input">
         <div className="input-box">
+
           <input
             value={message}
             onChange={(e) => setMessage(e.target.value)}
@@ -139,6 +223,7 @@ export default function App() {
           <button className="botao" onClick={sendMessage}>
             ➜
           </button>
+
         </div>
       </div>
 
