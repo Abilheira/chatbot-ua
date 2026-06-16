@@ -5,6 +5,7 @@ from bs4 import BeautifulSoup
 import os
 import requests
 from dotenv import load_dotenv
+import json
 
 load_dotenv()
 
@@ -36,7 +37,6 @@ SITEMAP_URL = "https://www.ua.pt/sitemap.xml"
 def get_all_urls_from_sitemap():
     r = requests.get(SITEMAP_URL)
     soup = BeautifulSoup(r.text, "lxml-xml")
-
     return [loc.text for loc in soup.find_all("loc") if "ua.pt" in loc.text]
 
 
@@ -55,7 +55,7 @@ def scrape(url):
 ua_text = ""
 print("🔄 Loading UA knowledge...")
 
-for i, url in enumerate(get_all_urls_from_sitemap()[:100]):
+for url in get_all_urls_from_sitemap()[:100]:
     try:
         ua_text += scrape(url) + " "
     except:
@@ -102,10 +102,8 @@ HISTÓRICO:
 INFORMAÇÃO UA:
 {get_context(user_message)}
 
-PERGUNTA:
+Pergunta:
 {user_message}
-
-Responde de forma clara.
 """
 
     endpoint = "https://api.iaedu.pt/agent-chat//api/v1/agent/cmamvd3n40000c801qeacoad2/stream"
@@ -130,22 +128,25 @@ Responde de forma clara.
 
     reply = ""
 
+    # 🔥 STREAM CORRETO
     for line in response.iter_lines():
         if not line:
             continue
 
         try:
-            import json
             data = json.loads(line.decode("utf-8"))
 
             if data.get("type") == "token":
                 reply += data.get("content", "")
 
             elif data.get("type") == "message":
-                reply = data["content"]["content"]
+                reply = data.get("content", {}).get("content", reply)
 
         except:
             continue
+
+    if not reply:
+        reply = "Erro ao gerar resposta."
 
     chat_history.append({"role": "assistant", "text": reply})
 
