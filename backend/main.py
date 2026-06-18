@@ -101,30 +101,40 @@ def chat(req: ChatRequest):
         raw_text = response.text
         reply = ""
         
-        # 🔥 NOVO PARSER ADAPTADO: Lida com JSON puro por linha (sem a tag "data:")
+        # 1. Tenta o parser estruturado por tokens
         for line in raw_text.split("\n"):
             line = line.strip()
             if not line:
                 continue
                 
             try:
-                # Se a linha ainda contiver "data:", removemos por segurança
                 if line.startswith("data:"):
                     line = line.replace("data:", "").strip()
                     
                 data_json = json.loads(line)
                 
-                # Agrupa os tokens do texto gerado
                 if data_json.get("type") == "token":
                     reply += data_json.get("content", "")
                 elif data_json.get("type") == "message":
                     content = data_json.get("content", {})
-                    reply = content.get("content", reply) if isinstance(content, dict) else content
+                    if isinstance(content, dict):
+                        reply = content.get("content", reply)
+                    else:
+                        reply = content
             except:
                 continue
 
+        # 🔄 RECURSO DE SUCESSO: Se o parser falhou mas veio texto no raw_text, não o deites fora!
+        if not reply.strip() and len(raw_text) > 10:
+            # Procura qualquer padrão de texto legível dentro do bloco de resposta por Regex
+            encontrados = re.findall(r'"content":\s*"([^"]+)"', raw_text)
+            if encontrados:
+                # Junta os fragmentos encontrados para não devolver vazio
+                reply = "".join(encontrados).replace("\\n", "\n")
+
+        # Se mesmo assim estiver vazio, devolve uma resposta padrão que não bloqueia
         if not reply.strip():
-            return {"response": "A API processou o pedido mas devolveu uma resposta vazia. Tenta reformular a tua questão."}
+            reply = "Não consegui aceder aos dados da universidade neste momento. Podes tentar reformular a pergunta?"
 
         return {"response": reply}
 
