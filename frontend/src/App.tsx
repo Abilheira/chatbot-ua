@@ -24,13 +24,21 @@ export default function App() {
 
   /* 🔥 SCROLL AUTOMÁTICO REFORÇADO */
   useEffect(() => {
-    // O setTimeout de 50ms garante que o React já renderizou o texto no ecrã antes de rolar
-    const timer = setTimeout(() => {
-      endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
-    }, 50);
+    const container = endRef.current?.parentElement;
+    if (container) {
+      // Executa um scroll imediato e outro ligeiramente atrasado para garantir
+      container.scrollTop = container.scrollHeight;
+      
+      const timer = setTimeout(() => {
+        container.scrollTo({
+          top: container.scrollHeight,
+          behavior: "smooth"
+        });
+      }, 80);
 
-    return () => clearTimeout(timer);
-  }, [chat, loading]); // Executa quando o chat muda OU quando o loading ativa/desativa
+      return () => clearTimeout(timer);
+    }
+  }, [chat, loading]);
 
   /* SEND MESSAGE */
   async function sendMessage(customMessage?: string) {
