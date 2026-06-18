@@ -7,44 +7,11 @@ type Message = {
   text: string;
 };
 
-/* =====================================================================
-   COMPONENTE: EfeitoEscrita (100% Seguro)
-   ===================================================================== */
-function EfeitoEscrita({ texto }: { texto: string }) {
-  const [textoExibido, setTextoExibido] = useState("");
-  
-  useEffect(() => {
-    // Se o texto não for uma string válida ou for a palavra "undefined", mostra vazio
-    if (!texto || typeof texto !== "string" || texto === "undefined") {
-      setTextoExibido("");
-      return;
-    }
-
-    const palavras = texto.split(" ");
-    let i = 0;
-    setTextoExibido(""); 
-    
-    const timer = setInterval(() => {
-      if (i < palavras.length) {
-        setTextoExibido((prev) => prev + (i === 0 ? "" : " ") + palavras[i]);
-        i++;
-      } else {
-        clearInterval(timer);
-      }
-    }, 45); 
-    
-    return () => clearInterval(timer);
-  }, [texto]);
-
-  return <span>{textoExibido}</span>;
-}
-
-
 export default function App() {
   const [page, setPage] = useState<"home" | "chat">("home");
   const [message, setMessage] = useState("");
 
-  // Voltou ao estado inicial padrão pura e simples (Sem LocalStorage)
+  // Estado inicial padrão e limpo
   const [chat, setChat] = useState<Message[]>([
     {
       role: "bot",
@@ -85,14 +52,12 @@ export default function App() {
 
       const data = await response.json();
 
-      // Força a validação explícita como string
+      // Validação simples contra respostas nulas ou vazias do servidor
       let respostaDoBot = data && data.response ? String(data.response).trim() : "";
       
-      // Se a string contiver ou for "undefined", substitui imediatamente por um aviso limpo
       if (!respostaDoBot || respostaDoBot.toLowerCase() === "undefined" || respostaDoBot === "") {
         respostaDoBot = "O assistente processou o pedido mas devolveu uma resposta vazia. Tenta reformular a tua questão.";
       }
-      
 
       setChat((prev) => [
         ...prev,
@@ -133,7 +98,7 @@ export default function App() {
   return (
     <div className={`app ${darkMode ? "dark" : ""}`}>
 
-      {/* HEADER (Vassoura removida, apenas Dark Mode) */}
+      {/* HEADER */}
       <div className="topo">
         <button className="logo-btn" onClick={() => setPage("home")}>
           <img src="/logobranco.png" className="chatbot-image2" />
@@ -157,12 +122,9 @@ export default function App() {
               <img src="/chatbot2.png" className="logo-bot" />
             )}
 
+            {/* Renderização direta do texto original sem componentes extra */}
             <div className="message-text">
-              {msg.role === "bot" ? (
-                <EfeitoEscrita texto={msg.text} />
-              ) : (
-                msg.text
-              )}
+              {msg.text}
             </div>
           </div>
         ))}
