@@ -78,51 +78,55 @@ export default function App() {
 
   /* SEND MESSAGE (CORRIGIDO) */
   async function sendMessage(customMessage?: string) {
-    // CORREÇÃO: Garante que usa o texto do botão/sugestão ou do input sem se baralhar
-    const userMsg = customMessage && customMessage.trim() ? customMessage : message;
+  const userMsg = customMessage && customMessage.trim() ? customMessage : message;
 
-    if (!userMsg.trim()) return;
+  if (!userMsg.trim()) return;
 
-    setUltimaMensagem(userMsg); 
-    setChat((prev) => [...prev, { role: "user", text: userMsg }]);
-    setMessage(""); // Limpa o input
-    setLoading(true);
+  setUltimaMensagem(userMsg); 
+  setChat((prev) => [...prev, { role: "user", text: userMsg }]);
+  setMessage(""); 
+  setLoading(true);
 
-    try {
-  const response = await fetch(
-    "https://chatbot-ua-wqvd.onrender.com/chat",
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ message: userMsg }),
-    }
-  );
-
-  const data = await response.json();
-
-  setChat((prev) => [
-    ...prev,
-    {
-      role: "bot",
-      // Se data.response não existir, pomos uma frase limpa sem mais validações aqui
-      text: data.response ? data.response : "O servidor não enviou uma resposta de texto válida.",
-    },
-  ]);
-} catch {
-  // ... o teu bloco catch mantém-se igual ...
-      setChat((prev) => [
-        ...prev,
-        {
-          role: "bot",
-          text: "Erro ao ligar ao servidor. Queres tentar novamente?",
+  try {
+    const response = await fetch(
+      "https://chatbot-ua-wqvd.onrender.com/chat",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
         },
-      ]);
+        body: JSON.stringify({ message: userMsg }),
+      }
+    );
+
+    const data = await response.json();
+
+    // VALIDAÇÃO RIGOROSA: Garante que o texto existe, não é nulo e não é "undefined" em formato string
+    let textoFinal = data && data.response ? data.response : "";
+    
+    if (!textoFinal || textoFinal.toString().trim() === "" || textoFinal === "undefined") {
+      textoFinal = "O assistente processou o pedido, mas o servidor gerou uma resposta vazia. Por favor, tenta reformular a tua questão.";
     }
 
-    setLoading(false);
+    setChat((prev) => [
+      ...prev,
+      {
+        role: "bot",
+        text: textoFinal,
+      },
+    ]);
+  } catch {
+    setChat((prev) => [
+      ...prev,
+      {
+        role: "bot",
+        text: "Erro ao ligar ao servidor. Queres tentar novamente?",
+      },
+    ]);
   }
+
+  setLoading(false);
+}
 
   /* HOME */
   if (page === "home") {

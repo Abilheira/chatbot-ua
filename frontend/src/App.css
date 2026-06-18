@@ -258,3 +258,9 @@
 .app.dark .tic-tac-dots span {
   background-color: #3aa34a; /* Verde do dark mode */
 }
+
+
+.message-text span {
+  white-space: pre-line;
+  display: inline-block;
+}
