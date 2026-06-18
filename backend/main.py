@@ -63,10 +63,10 @@ def chat(req: ChatRequest):
         linha_low = linha.lower()
         if any(w in linha_low for w in words if len(w) > 3):
             contexto_linhas.append(linha)
-            if len(contexto_linhas) >= 3:
+            if len(contexto_linhas) >= 1:  # <-- Mudado para 1 linha (antes eram 3)
                 break
     
-    contexto = " ".join(contexto_linhas) if contexto_linhas else "Informações gerais sobre a UA."
+    contexto = contexto_linhas[0] if contexto_linhas else "Infos gerais da UA."
 
     prompt = f"És o assistente oficial da Universidade de Aveiro. Responde estritamente sobre temas da universidade. Pergunta do aluno sobre a UA: {user_message}. Contexto extraído do site: {contexto}"
     
