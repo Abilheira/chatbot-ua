@@ -7,16 +7,56 @@ type Message = {
   text: string;
 };
 
+function EfeitoEscrita({ texto }: { texto: string }) {
+  const [textoExibido, setTextoExibido] = useState("");
+  
+  useEffect(() => {
+    const palavras = texto.split(" ");
+    let i = 0;
+    setTextoExibido(""); // Reinicia o texto
+    
+    const timer = setInterval(() => {
+      if (i < palavras.length) {
+        setTextoExibido((prev) => prev + (i === 0 ? "" : " ") + palavras[i]);
+        i++;
+      } else {
+        clearInterval(timer);
+      }
+    }, 45); // Velocidade da escrita (45ms por palavra fica super natural)
+    
+    return () => clearInterval(timer);
+  }, [texto]);
+
+  return <span>{textoExibido}</span>;
+}
+
+
+
 export default function App() {
   const [page, setPage] = useState<"home" | "chat">("home");
   const [message, setMessage] = useState("");
 
-  const [chat, setChat] = useState<Message[]>([
+  const [chat, setChat] = useState<Message[]>(() => {
+  const guardado = localStorage.getItem("chat_ua_history");
+  return guardado ? JSON.parse(guardado) : [
     {
       role: "bot",
       text: "Olá! Tira as tuas dúvidas comigo :)",
     },
-  ]);
+  ];
+});
+
+useEffect(() => {
+  localStorage.setItem("chat_ua_history", JSON.stringify(chat));
+}, [chat]);
+
+function limparChat() {
+  const chatInicial: Message[] = [
+    { role: "bot", text: "Olá! Tira as tuas dúvidas comigo :)" }
+  ];
+  setChat(chatInicial);
+  localStorage.setItem("chat_ua_history", JSON.stringify(chatInicial));
+}
 
   const endRef = useRef<HTMLDivElement | null>(null);
 
@@ -28,7 +68,7 @@ export default function App() {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chat]);
 
-  /* SEND MESSAGE */
+  /* SEND <div className="message-text">*/
   async function sendMessage(customMessage?: string) {
     const userMsg = customMessage ?? message;
 
@@ -98,13 +138,15 @@ export default function App() {
         </button>
 
         <div className="header-actions">
-          <button
-            onClick={() => setDarkMode(!darkMode)}
-            className="icon-btn"
-          >
+        {/* Botão de Limpar Chat */}
+        <button onClick={limparChat} className="icon-btn" title="Limpar conversa">
+            🧹
+        </button>
+  
+        <button onClick={() => setDarkMode(!darkMode)} className="icon-btn">
             {darkMode ? "☀️" : "🌙"}
-          </button>
-        </div>
+        </button>
+    </div>
       </div>
 
       {/* CHAT */}
@@ -120,8 +162,12 @@ export default function App() {
 
             {/* IMPORTANTE: isto preserva quebras de linha */}
             <div className="message-text">
-              {msg.text}
-            </div>
+              {msg.role === "bot" ? (
+                <EfeitoEscrita texto={msg.text} />
+            ) : (
+              msg.text
+            )}
+          </div>
           </div>
         ))}
 
