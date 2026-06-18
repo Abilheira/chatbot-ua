@@ -125,6 +125,7 @@
   text-decoration: none;
   color: #111; /* 🔥 obrigatório */
   display: block;
+  border: 1px solid #dcdcdc;
 }
 
 /* BOTÃO */
@@ -133,9 +134,17 @@
   background: #55b51f;
   color: white;
   border: none;
-  padding: 12px 25px;
+  padding: 14px 35px;
   border-radius: 25px;
   cursor: pointer;
+  font-size: 1.2rem;
+  font-weight: 600;
+  box-shadow: 0 4px 15px rgba(92, 169, 60, 0.3);
+  transition: transform 0.2s ease;
+}
+
+.start-btn:hover {
+  transform: scale(1.05); 
 }
 
 .icon-btn {
@@ -145,3 +154,16 @@
   cursor: pointer;
 }
 
+.suggestions button, .shortcuts a {
+  display: flex;
+  align-items: center;
+  justify-content: center; /* Se quiseres centrar o texto todo */
+  gap: 8px; /* Dá um espaço fixo e bonito entre o emoji e o texto */
+  padding: 12px 20px;
+}
+
+
+.shortcuts a:hover {
+  border-color: #5ca93c; /* Muda para a cor do teu logo ao passar o rato */
+  color: #5ca93c;
+}
