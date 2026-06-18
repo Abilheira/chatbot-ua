@@ -126,8 +126,15 @@ export default function App() {
         ))}
 
         {loading && (
-          <div className="loading-text">A responder...</div>
-        )}
+            <div className="mensagem-bot loading-box">
+            <img src="/chatbot2.png" className="logo-bot" />
+            <div className="tic-tac-dots">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+        </div>
+      )}
 
         <div ref={endRef} />
       </div>
