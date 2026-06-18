@@ -96,36 +96,57 @@
 /* SUGESTÕES */
 .suggestions {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
+  grid-template-columns: 1fr 1fr; /* Força 2 colunas iguais lado a lado */
+  gap: 16px;                     /* Espaço entre os cartões */
+  width: 100%;
+  max-width: 650px;              /* Limite para não esticar demasiado em ecrãs grandes */
+  margin: 0 auto 24px auto;
 }
 
 .suggestions button {
-  background: white;
-  border: none;
-  padding: 15px;
-  border-radius: 12px;
-  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
   text-align: left;
-
-  color: #111; /* 🔥 SEM ISTO FICA BRANCO OU INVISÍVEL */
+  background-color: #ffffff;
+  color: #333333;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 500;
+  padding: 16px;
+  gap: 12px;
+  height: 100%;                  /* Alinha as alturas da mesma linha automaticamente */
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
 }
 
 /* ATALHOS */
 .shortcuts {
   display: flex;
-  flex-direction: column;
-  gap: 10px;
+  flex-direction: column;        /* Mantém uma linha por baixo da outra */
+  gap: 12px;
+  width: 100%;
+  max-width: 650px;
+  margin: 0 auto;
 }
 
 .shortcuts a {
-  background: white;
-  padding: 12px;
-  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  text-align: left;
+  background-color: #ffffff;
+  color: #333333;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  font-weight: 500;
+  padding: 14px 24px;
+  gap: 14px;
   text-decoration: none;
-  color: #111; /* 🔥 obrigatório */
-  display: block;
-  
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
 }
 
 /* BOTÃO */
@@ -162,13 +183,16 @@
   padding: 12px 20px;
 }
 
-
-.shortcuts a {
-  background: transparent;
-  border: 1px solid #dcdcdc;
-  color: #333;
+.suggestions button:hover, .shortcuts a:hover {
+  background-color: #f8fafc;
+  border-color: #5ca93c;         /* O verde do teu logótipo */
+  transform: translateY(-2px);   /* Pequeno salto para parecer interativo */
+  box-shadow: 0 4px 12px rgba(92, 169, 60, 0.15);
 }
-.shortcuts a:hover {
-  border-color: #5ca93c; /* Muda para a cor do teu logo ao passar o rato */
-  color: #5ca93c;
+
+/* RESPONSIVIDADE (Para telemóveis) */
+@media (max-width: 480px) {
+  .suggestions {
+    grid-template-columns: 1fr; /* No telemóvel volta a ficar tudo em fila única para não esmagar text */
+  }
 }
