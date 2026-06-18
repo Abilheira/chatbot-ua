@@ -167,29 +167,32 @@ export default function App() {
       </div>
 
       {/* INPUT */}
-      <div className="area-input">
-        <div className="input-box">
+      <div className="area-input" style={{ gap: "10px", alignItems: "center" }}>
+        <div className="input-box" style={{ flex: 1 }}>
           <input
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && sendMessage()}
             placeholder="Pergunta alguma coisa..."
           />
-          
-          {/* 🔥 BOTÃO DE LIMPAR INTEGRADO À DIREITA NO INPUT */}
-          <button 
-            onClick={limparChat} 
-            className="icon-btn" 
-            style={{ marginRight: "8px", fontSize: "18px" }}
-            title="Limpar conversa"
-          >
-            🗑️
-          </button>
-
           <button className="botao" onClick={() => sendMessage()}>
             ➜
           </button>
         </div>
+
+        {/* 🔥 BOTÃO DE LIMPAR FORA DA BOX, DO LADO DIREITO */}
+        <button 
+          onClick={limparChat} 
+          className="botao" 
+          style={{ 
+            background: darkMode ? "#333" : "#d1d1d1", 
+            fontSize: "18px",
+            flexShrink: 0
+          }}
+          title="Limpar conversa"
+        >
+          🗑️
+        </button>
       </div>
 
     </div>
