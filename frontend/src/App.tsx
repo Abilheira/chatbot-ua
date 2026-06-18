@@ -167,7 +167,7 @@ export default function App() {
       </div>
 
       {/* INPUT */}
-      <div className="area-input" style={{ gap: "10px", alignItems: "center" }}>
+      <div className="area-input" style={{ gap: "12px", alignItems: "center" }}>
         <div className="input-box" style={{ flex: 1 }}>
           <input
             value={message}
@@ -180,14 +180,20 @@ export default function App() {
           </button>
         </div>
 
-        {/* 🔥 BOTÃO DE LIMPAR FORA DA BOX, DO LADO DIREITO */}
+        {/* 🔥 BOTÃO DE LIMPAR REDESENHADO E CENTRALIZADO */}
         <button 
           onClick={limparChat} 
           className="botao" 
           style={{ 
-            background: darkMode ? "#333" : "#d1d1d1", 
-            fontSize: "18px",
-            flexShrink: 0
+            background: darkMode ? "#2a2a2a" : "#ffffff", 
+            border: darkMode ? "2px solid #3aa34a" : "2px solid #52be11",
+            fontSize: "20px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flexShrink: 0,
+            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.05)",
+            cursor: "pointer"
           }}
           title="Limpar conversa"
         >
