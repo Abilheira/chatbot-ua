@@ -8,20 +8,20 @@ type Message = {
 };
 
 /* =====================================================================
-   COMPONENTE: EfeitoEscrita
+   COMPONENTE: EfeitoEscrita (100% Seguro)
    ===================================================================== */
 function EfeitoEscrita({ texto }: { texto: string }) {
   const [textoExibido, setTextoExibido] = useState("");
   
   useEffect(() => {
-    // Se não for string ou vier vazia, não faz nada
-    if (!texto || typeof texto !== "string") {
+    if (!texto || typeof texto !== "string" || texto === "undefined") {
       setTextoExibido("");
       return;
     }
 
-    // 🔥 Remove qualquer palavra "undefined" fantasma que venha misturada por erro de string
-    const textoLimpo = texto.replace(/\bundefined\b/g, "").trim();
+    // Limpa qualquer resíduo se houver
+    const textoLimpo = texto.replace(/undefined/gi, "").trim();
+    if (!textoLimpo) return;
 
     const palavras = textoLimpo.split(" ");
     let i = 0;
@@ -46,29 +46,14 @@ function EfeitoEscrita({ texto }: { texto: string }) {
 export default function App() {
   const [page, setPage] = useState<"home" | "chat">("home");
   const [message, setMessage] = useState("");
-  const [ultimaMensagem, setUltimaMensagem] = useState(""); 
 
-  const [chat, setChat] = useState<Message[]>(() => {
-    const guardado = localStorage.getItem("chat_ua_history");
-    return guardado ? JSON.parse(guardado) : [
-      {
-        role: "bot",
-        text: "Olá! Tira as tuas dúvidas comigo :)",
-      },
-    ];
-  });
-
-  useEffect(() => {
-    localStorage.setItem("chat_ua_history", JSON.stringify(chat));
-  }, [chat]);
-
-  function limparChat() {
-    const chatInicial: Message[] = [
-      { role: "bot", text: "Olá! Tira as tuas dúvidas comigo :)" }
-    ];
-    setChat(chatInicial);
-    localStorage.setItem("chat_ua_history", JSON.stringify(chatInicial));
-  }
+  // Voltou ao estado inicial padrão pura e simples (Sem LocalStorage)
+  const [chat, setChat] = useState<Message[]>([
+    {
+      role: "bot",
+      text: "Olá! Tira as tuas dúvidas comigo :)",
+    },
+  ]);
 
   const endRef = useRef<HTMLDivElement | null>(null);
   const [darkMode, setDarkMode] = useState(false);
@@ -79,57 +64,55 @@ export default function App() {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chat]);
 
-  /* SEND MESSAGE (CORRIGIDO) */
+  /* SEND MESSAGE */
   async function sendMessage(customMessage?: string) {
-  const userMsg = customMessage && customMessage.trim() ? customMessage : message;
+    const userMsg = customMessage && customMessage.trim() ? customMessage : message;
 
-  if (!userMsg.trim()) return;
+    if (!userMsg.trim()) return;
 
-  setUltimaMensagem(userMsg); 
-  setChat((prev) => [...prev, { role: "user", text: userMsg }]);
-  setMessage(""); 
-  setLoading(true);
+    setChat((prev) => [...prev, { role: "user", text: userMsg }]);
+    setMessage(""); 
+    setLoading(true);
 
-  try {
-  const response = await fetch(
-    "https://chatbot-ua-wqvd.onrender.com/chat",
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ message: userMsg }),
+    try {
+      const response = await fetch(
+        "https://chatbot-ua-wqvd.onrender.com/chat",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ message: userMsg }),
+        }
+      );
+
+      const data = await response.json();
+
+      let respostaDoBot = data && data.response ? String(data.response).trim() : "";
+      
+      if (!respostaDoBot || respostaDoBot === "undefined" || respostaDoBot === "") {
+        respostaDoBot = "O assistente processou o pedido mas devolveu uma resposta vazia. Tenta reformular a tua questão.";
+      }
+
+      setChat((prev) => [
+        ...prev,
+        {
+          role: "bot",
+          text: respostaDoBot,
+        },
+      ]);
+    } catch {
+      setChat((prev) => [
+        ...prev,
+        {
+          role: "bot",
+          text: "Erro ao ligar ao servidor.",
+        },
+      ]);
     }
-  );
 
-  const data = await response.json();
-
-  // Se data.response não existir ou vier a string "undefined", usamos uma frase padrão fixa
-  let respostaDoBot = data && data.response ? data.response.toString().trim() : "";
-  
-  if (!respostaDoBot || respostaDoBot === "undefined" || respostaDoBot === "") {
-    respostaDoBot = "O assistente processou o pedido mas devolveu uma resposta vazia. Tenta reformular a tua questão.";
+    setLoading(false);
   }
-
-  setChat((prev) => [
-    ...prev,
-    {
-      role: "bot",
-      text: respostaDoBot,
-    },
-  ]);
-} catch {
-  setChat((prev) => [
-    ...prev,
-    {
-      role: "bot",
-      text: "Erro ao ligar ao servidor. Queres tentar novamente?",
-    },
-  ]);
-}
-
-  setLoading(false);
-}
 
   /* HOME */
   if (page === "home") {
@@ -138,7 +121,7 @@ export default function App() {
         onStart={() => setPage("chat")}
         onSuggestionClick={(text) => {
           setPage("chat");
-          sendMessage(text); // Agora funciona de forma independente!
+          sendMessage(text); 
         }}
         darkMode={darkMode}
         setDarkMode={() => setDarkMode(!darkMode)}
@@ -150,16 +133,13 @@ export default function App() {
   return (
     <div className={`app ${darkMode ? "dark" : ""}`}>
 
-      {/* HEADER */}
+      {/* HEADER (Vassoura removida, apenas Dark Mode) */}
       <div className="topo">
         <button className="logo-btn" onClick={() => setPage("home")}>
           <img src="/logobranco.png" className="chatbot-image2" />
         </button>
 
         <div className="header-actions">
-          <button onClick={limparChat} className="icon-btn" title="Limpar conversa">
-            🧹
-          </button>
           <button onClick={() => setDarkMode(!darkMode)} className="icon-btn">
             {darkMode ? "☀️" : "🌙"}
           </button>
@@ -168,38 +148,24 @@ export default function App() {
 
       {/* CHAT CONTAINER */}
       <div className="chat-container">
-        {chat.map((msg, i) => {
-          const textoMensagem = msg && msg.text ? msg.text : "";
+        {chat.map((msg, i) => (
+          <div
+            key={i}
+            className={msg.role === "user" ? "mensagem-user" : "mensagem-bot"}
+          >
+            {msg.role === "bot" && (
+              <img src="/chatbot2.png" className="logo-bot" />
+            )}
 
-          return (
-            <div
-              key={i}
-              className={msg.role === "user" ? "mensagem-user" : "mensagem-bot"}
-            >
-              {msg.role === "bot" && (
-                <img src="/chatbot2.png" className="logo-bot" />
+            <div className="message-text">
+              {msg.role === "bot" ? (
+                <EfeitoEscrita texto={msg.text} />
+              ) : (
+                msg.text
               )}
-
-              <div className="message-text">
-                {msg.role === "bot" ? (
-                  <>
-                    <EfeitoEscrita texto={textoMensagem} />
-                    {textoMensagem.includes("Erro ao ligar ao servidor") && (
-                      <button 
-                        className="btn-tentar-novamente" 
-                        onClick={() => sendMessage(ultimaMensagem)}
-                      >
-                        Tentar novamente 🔄
-                      </button>
-                    )}
-                  </>
-                ) : (
-                  textoMensagem
-                )}
-              </div>
             </div>
-          );
-        })}
+          </div>
+        ))}
 
         {loading && (
           <div className="mensagem-bot loading-box">
