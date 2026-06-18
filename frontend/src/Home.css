@@ -157,13 +157,47 @@
 .suggestions button, .shortcuts a {
   display: flex;
   align-items: center;
-  justify-content: center; /* Se quiseres centrar o texto todo */
-  gap: 8px; /* Dá um espaço fixo e bonito entre o emoji e o texto */
-  padding: 12px 20px;
+  justify-content: flex-start; /* Alinha tudo à esquerda */
+  text-align: left;
+  
+  background-color: #ffffff;
+  color: #333333;
+  border: 1px solid #e2e8f0; /* Uma borda subtil para dar definição */
+  border-radius: 12px; /* Cantos arredondados modernos */
+  
+  /* Letra maior como pediste antes */
+  font-size: 1.1rem; 
+  font-weight: 500;
+  
+  /* O segredo do alinhamento está aqui: */
+  padding: 14px 24px; /* Mais espaço interno */
+  gap: 14px; /* Espaço perfeito e fixo entre o emoji e o texto */
+  
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  text-decoration: none; /* Remove o sublinhado dos links */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02); /* Sombra quase invisível */
 }
 
 
 .shortcuts a:hover {
   border-color: #5ca93c; /* Muda para a cor do teu logo ao passar o rato */
   color: #5ca93c;
+}
+
+/* EFEITO AO PASSAR O RATO (HOVER) */
+.suggestions button:hover, .shortcuts a:hover {
+  background-color: #f8fafc; /* Fundo ligeiramente cinza ao passar o rato */
+  border-color: #5ca93c; /* Borda ganha a cor verde do teu logo */
+  transform: translateY(-1px); /* Pequeno efeito de flutuar */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+}
+
+.suggestions, .shortcuts {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  max-width: 600px; /* Garante que os botões não esticam infinitamente em ecrãs gigantes */
+  margin: 0 auto;
 }
