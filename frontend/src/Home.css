@@ -96,19 +96,33 @@
 /* SUGESTÕES */
 .suggestions {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
+  grid-template-columns: 1fr 1fr; /* Divide em 2 colunas iguais na horizontal */
+  gap: 16px; /* Espaço entre os cartões */
+  width: 100%;
+  max-width: 650px; /* Alarga um pouco para caber bem o texto lado a lado */
+  margin: 0 auto 24px auto;
 }
 
 .suggestions button {
-  background: white;
-  border: none;
-  padding: 15px;
-  border-radius: 12px;
-  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
   text-align: left;
-
-  color: #111; /* 🔥 SEM ISTO FICA BRANCO OU INVISÍVEL */
+  background-color: #ffffff;
+  color: #333333;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  
+  /* Ajuste de tamanho para o formato horizontal */
+  font-size: 1rem; /* Um pouco menor para o texto não quebrar feio em ecrãs pequenos */
+  font-weight: 500;
+  padding: 16px; 
+  gap: 12px;
+  height: 100%; /* Garante que os dois botões da mesma linha têm a mesma altura */
+  
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
 }
 
 /* ATALHOS */
@@ -119,13 +133,23 @@
 }
 
 .shortcuts a {
-  background: white;
-  padding: 12px;
-  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  text-align: left;
+  background-color: #ffffff;
+  color: #333333;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  
+  font-size: 1.1rem;
+  font-weight: 500;
+  padding: 14px 24px;
+  gap: 14px;
+  
+  cursor: pointer;
   text-decoration: none;
-  color: #111; /* 🔥 obrigatório */
-  display: block;
-  border: 1px solid #dcdcdc;
+  transition: all 0.2s ease-in-out;
 }
 
 /* BOTÃO */
@@ -185,12 +209,11 @@
   color: #5ca93c;
 }
 
-/* EFEITO AO PASSAR O RATO (HOVER) */
 .suggestions button:hover, .shortcuts a:hover {
-  background-color: #f8fafc; /* Fundo ligeiramente cinza ao passar o rato */
-  border-color: #5ca93c; /* Borda ganha a cor verde do teu logo */
-  transform: translateY(-1px); /* Pequeno efeito de flutuar */
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+  background-color: #f8fafc;
+  border-color: #5ca93c; /* O teu verde da UA */
+  transform: translateY(-2px); /* Efeito flutuante ligeiramente maior */
+  box-shadow: 0 4px 12px rgba(92, 169, 60, 0.1); /* Sombra suave com tom esverdeado */
 }
 
 .suggestions, .shortcuts {
@@ -200,4 +223,11 @@
   width: 100%;
   max-width: 600px; /* Garante que os botões não esticam infinitamente em ecrãs gigantes */
   margin: 0 auto;
+}
+
+/* RESPONSIVIDADE: Se o ecrã for de um telemóvel pequeno, volta a 1 coluna para não esmagar o texto */
+@media (max-width: 480px) {
+  .suggestions {
+    grid-template-columns: 1fr;
+  }
 }
