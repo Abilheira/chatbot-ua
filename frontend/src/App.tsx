@@ -22,10 +22,15 @@ export default function App() {
   const [darkMode, setDarkMode] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  /* SCROLL AUTOMÁTICO */
+  /* 🔥 SCROLL AUTOMÁTICO REFORÇADO */
   useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [chat]);
+    // O setTimeout de 50ms garante que o React já renderizou o texto no ecrã antes de rolar
+    const timer = setTimeout(() => {
+      endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+    }, 50);
+
+    return () => clearTimeout(timer);
+  }, [chat, loading]); // Executa quando o chat muda OU quando o loading ativa/desativa
 
   /* SEND MESSAGE */
   async function sendMessage(customMessage?: string) {
@@ -110,7 +115,7 @@ export default function App() {
       </div>
 
       {/* CHAT CONTAINER */}
-      <div className="chat-container">
+      <div className="chat-container" style={{ overflowY: "auto" }}>
         {chat.map((msg, i) => (
           <div
             key={i}
@@ -137,7 +142,8 @@ export default function App() {
           </div>
         )}
 
-        <div ref={endRef} />
+        {/* Elemento âncora para o scroll */}
+        <div ref={endRef} style={{ float: "left", clear: "both" }} />
       </div>
 
       {/* INPUT */}
