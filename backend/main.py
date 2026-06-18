@@ -6,6 +6,7 @@ import requests
 from dotenv import load_dotenv
 import json
 import re
+import uuid
 
 load_dotenv()
 
@@ -63,17 +64,19 @@ def chat(req: ChatRequest):
         linha_low = linha.lower()
         if any(w in linha_low for w in words if len(w) > 3):
             contexto_linhas.append(linha)
-            if len(contexto_linhas) >= 1:  # <-- Mudado para 1 linha (antes eram 3)
+            if len(contexto_linhas) >= 1:
                 break
     
     contexto = contexto_linhas[0] if contexto_linhas else "Infos gerais da UA."
-
-    prompt = f"És o assistente oficial da Universidade de Aveiro. Responde estritamente sobre temas da universidade. Pergunta do aluno sobre a UA: {user_message}. Contexto extraído do site: {contexto}"
+    prompt = f"Contexto: {contexto}. Pergunta UA: {user_message}"
+    
+    # 🔥 GERA UM ID ÚNICO PARA CADA MENSAGEM (Ignora o histórico entupido da API)
+    id_conversa_limpa = f"thread-{uuid.uuid4().hex[:12]}"
     
     endpoint = "https://api.iaedu.pt/agent-chat/api/v1/agent/cmamvd3n40000c801qeacoad2/stream"
     form_data = {
         "channel_id": "cmqa0pde3aoy2nr01b2jnjlef",
-        "thread_id": "local-thread-unique-124",
+        "thread_id": id_conversa_limpa,  # <-- Usa o ID dinâmico aqui
         "user_info": "{}",
         "message": prompt
     }
@@ -87,25 +90,21 @@ def chat(req: ChatRequest):
 
         raw_text = response.text
         
-        # 🚨 DIAGNÓSTICO: Isto vai aparecer nos logs do teu Render!
         print("--- RESPOSTA BRUTA DA API IAEDU ---")
         print(raw_text)
         print("----------------------------------")
 
         reply = ""
         
-        # Super Parser: Se contiver texto puro, usa-o. Se for JSON-Stream, extrai.
         for line in raw_text.split("\n"):
             line = line.strip()
             if not line:
                 continue
                 
-            # Remove prefixos de stream comuns se existirem
             if line.startswith("data:"):
                 line = line.replace("data:", "").strip()
                 
             try:
-                # Se for JSON estruturado da IAedu
                 data_json = json.loads(line)
                 if data_json.get("type") == "token":
                     reply += data_json.get("content", "")
@@ -113,18 +112,14 @@ def chat(req: ChatRequest):
                     content = data_json.get("content", {})
                     reply = content.get("content", reply) if isinstance(content, dict) else content
             except json.JSONDecodeError:
-                # Se NÃO for JSON e for apenas texto corrido na linha, acumula directamente
                 if not line.startswith("{") and not line.startswith("["):
                     reply += line + "\n"
 
-        # Se o parser linha-a-linha falhou mas temos texto bruto acumulado no raw_text
         if not reply.strip() and len(raw_text) > 5:
-            # Tenta apanhar qualquer bloco de texto dentro de "content" via regex simples
             encontrados = re.findall(r'"content":\s*"([^"]+)"', raw_text)
             if encontrados:
                 reply = "".join(encontrados).replace("\\n", "\n")
             else:
-                # Em último recurso, assume o texto bruto limpo de lixo JSON
                 reply = raw_text
 
         if not reply.strip():
