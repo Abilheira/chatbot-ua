@@ -8,13 +8,16 @@ type Message = {
 };
 
 /* =====================================================================
-   COMPONENTE: EfeitoEscrita (CORRIGIDO SEM UNDEFINED)
+   COMPONENTE: EfeitoEscrita
    ===================================================================== */
 function EfeitoEscrita({ texto }: { texto: string }) {
   const [textoExibido, setTextoExibido] = useState("");
   
   useEffect(() => {
-    if (!texto) return;
+    if (!texto || typeof texto !== "string") {
+      setTextoExibido("");
+      return;
+    }
 
     const palavras = texto.split(" ");
     let i = 0;
@@ -32,7 +35,6 @@ function EfeitoEscrita({ texto }: { texto: string }) {
     return () => clearInterval(timer);
   }, [texto]);
 
-  // Retorna APENAS o estado controlado. Sem misturas perigosas!
   return <span>{textoExibido}</span>;
 }
 
@@ -40,7 +42,7 @@ function EfeitoEscrita({ texto }: { texto: string }) {
 export default function App() {
   const [page, setPage] = useState<"home" | "chat">("home");
   const [message, setMessage] = useState("");
-  const [ultimaMensagem, setUltimaMensagem] = useState(""); // 🔥 Para o Retry funcionar
+  const [ultimaMensagem, setUltimaMensagem] = useState(""); 
 
   const [chat, setChat] = useState<Message[]>(() => {
     const guardado = localStorage.getItem("chat_ua_history");
@@ -73,15 +75,16 @@ export default function App() {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chat]);
 
-  /* SEND MESSAGE */
+  /* SEND MESSAGE (CORRIGIDO) */
   async function sendMessage(customMessage?: string) {
-    const userMsg = customMessage ?? message;
+    // CORREÇÃO: Garante que usa o texto do botão/sugestão ou do input sem se baralhar
+    const userMsg = customMessage && customMessage.trim() ? customMessage : message;
 
     if (!userMsg.trim()) return;
 
-    setUltimaMensagem(userMsg); // Guarda o input do user
+    setUltimaMensagem(userMsg); 
     setChat((prev) => [...prev, { role: "user", text: userMsg }]);
-    setMessage("");
+    setMessage(""); // Limpa o input
     setLoading(true);
 
     try {
@@ -92,6 +95,7 @@ export default function App() {
           headers: {
             "Content-Type": "application/json",
           },
+          // CORREÇÃO: Agora envia explicitamente a variável userMsg certa!
           body: JSON.stringify({ message: userMsg }),
         }
       );
@@ -102,7 +106,7 @@ export default function App() {
         ...prev,
         {
           role: "bot",
-          text: data.response,
+          text: data.response || "Não consegui obter uma resposta válida.",
         },
       ]);
     } catch {
@@ -125,7 +129,7 @@ export default function App() {
         onStart={() => setPage("chat")}
         onSuggestionClick={(text) => {
           setPage("chat");
-          sendMessage(text);
+          sendMessage(text); // Agora funciona de forma independente!
         }}
         darkMode={darkMode}
         setDarkMode={() => setDarkMode(!darkMode)}
@@ -145,7 +149,7 @@ export default function App() {
 
         <div className="header-actions">
           <button onClick={limparChat} className="icon-btn" title="Limpar conversa">
-            | 🧹
+            🧹
           </button>
           <button onClick={() => setDarkMode(!darkMode)} className="icon-btn">
             {darkMode ? "☀️" : "🌙"}
@@ -156,7 +160,6 @@ export default function App() {
       {/* CHAT CONTAINER */}
       <div className="chat-container">
         {chat.map((msg, i) => {
-          // Garante string válida para o renderizador
           const textoMensagem = msg && msg.text ? msg.text : "";
 
           return (
@@ -172,7 +175,6 @@ export default function App() {
                 {msg.role === "bot" ? (
                   <>
                     <EfeitoEscrita texto={textoMensagem} />
-                    {/* Botão de Tentar Novamente caso dê erro no Fetch */}
                     {textoMensagem.includes("Erro ao ligar ao servidor") && (
                       <button 
                         className="btn-tentar-novamente" 
