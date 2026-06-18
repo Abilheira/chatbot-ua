@@ -18,14 +18,26 @@ export default function App() {
     },
   ]);
 
-  const endRef = useRef<HTMLDivElement | null>(null);
+  // 🔥 Criamos uma referência para a última mensagem do Bot
+  const ultimaMsgBotRef = useRef<HTMLDivElement | null>(null);
   const [darkMode, setDarkMode] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  /* 🔥 SCROLL AUTOMÁTICO REFORÇADO */
+  /* 🔥 SCROLL DIRECIONADO AO TOPO DA NOVA MENSAGEM DO BOT */
   useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [chat, loading]);
+    if (chat.length > 1) {
+      const ultimaMsg = chat[chat.length - 1];
+      // Só faz o scroll para o topo se a última mensagem tiver sido do bot
+      if (ultimaMsg.role === "bot") {
+        setTimeout(() => {
+          ultimaMsgBotRef.current?.scrollIntoView({ 
+            behavior: "smooth", 
+            block: "start" // 👈 "start" faz alinhar pelo topo do balão!
+          });
+        }, 60);
+      }
+    }
+  }, [chat]);
 
   /* SEND MESSAGE */
   async function sendMessage(customMessage?: string) {
@@ -111,20 +123,27 @@ export default function App() {
 
       {/* CHAT CONTAINER */}
       <div className="chat-container" style={{ overflowY: "auto" }}>
-        {chat.map((msg, i) => (
-          <div
-            key={i}
-            className={msg.role === "user" ? "mensagem-user" : "mensagem-bot"}
-          >
-            {msg.role === "bot" && (
-              <img src="/chatbot2.png" className="logo-bot" />
-            )}
+        {chat.map((msg, i) => {
+          // Verifica se este elemento é a última mensagem da lista
+          const eAUltima = i === chat.length - 1;
 
-            <div className="message-text">
-              {msg.text}
+          return (
+            <div
+              key={i}
+              // 🔥 Se for a última mensagem e for do bot, passamos a Referência de Scroll
+              ref={eAUltima && msg.role === "bot" ? ultimaMsgBotRef : null}
+              className={msg.role === "user" ? "mensagem-user" : "mensagem-bot"}
+            >
+              {msg.role === "bot" && (
+                <img src="/chatbot2.png" className="logo-bot" />
+              )}
+
+              <div className="message-text">
+                {msg.text}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
 
         {loading && (
           <div className="mensagem-bot loading-box">
@@ -136,9 +155,6 @@ export default function App() {
             </div>
           </div>
         )}
-
-        {/* 🔄 Âncora de scroll limpa e perfeita no final do container */}
-        <div ref={endRef} />
       </div>
 
       {/* INPUT */}
