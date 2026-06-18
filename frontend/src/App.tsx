@@ -14,16 +14,13 @@ function EfeitoEscrita({ texto }: { texto: string }) {
   const [textoExibido, setTextoExibido] = useState("");
   
   useEffect(() => {
+    // Se o texto não for uma string válida ou for a palavra "undefined", mostra vazio
     if (!texto || typeof texto !== "string" || texto === "undefined") {
       setTextoExibido("");
       return;
     }
 
-    // Limpa qualquer resíduo se houver
-    const textoLimpo = texto.replace(/undefined/gi, "").trim();
-    if (!textoLimpo) return;
-
-    const palavras = textoLimpo.split(" ");
+    const palavras = texto.split(" ");
     let i = 0;
     setTextoExibido(""); 
     
@@ -88,11 +85,14 @@ export default function App() {
 
       const data = await response.json();
 
+      // Força a validação explícita como string
       let respostaDoBot = data && data.response ? String(data.response).trim() : "";
       
-      if (!respostaDoBot || respostaDoBot === "undefined" || respostaDoBot === "") {
+      // Se a string contiver ou for "undefined", substitui imediatamente por um aviso limpo
+      if (!respostaDoBot || respostaDoBot.toLowerCase() === "undefined" || respostaDoBot === "") {
         respostaDoBot = "O assistente processou o pedido mas devolveu uma resposta vazia. Tenta reformular a tua questão.";
       }
+      
 
       setChat((prev) => [
         ...prev,
