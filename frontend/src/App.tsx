@@ -35,6 +35,7 @@ function EfeitoEscrita({ texto }: { texto: string }) {
     return () => clearInterval(timer);
   }, [texto]);
 
+  // Sem lógicas de "|| texto", apenas a variável controlada!
   return <span>{textoExibido}</span>;
 }
 
@@ -88,28 +89,29 @@ export default function App() {
     setLoading(true);
 
     try {
-      const response = await fetch(
-        "https://chatbot-ua-wqvd.onrender.com/chat",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          // CORREÇÃO: Agora envia explicitamente a variável userMsg certa!
-          body: JSON.stringify({ message: userMsg }),
-        }
-      );
+  const response = await fetch(
+    "https://chatbot-ua-wqvd.onrender.com/chat",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ message: userMsg }),
+    }
+  );
 
-      const data = await response.json();
+  const data = await response.json();
 
-      setChat((prev) => [
-        ...prev,
-        {
-          role: "bot",
-          text: data.response || "Não consegui obter uma resposta válida.",
-        },
-      ]);
-    } catch {
+  setChat((prev) => [
+    ...prev,
+    {
+      role: "bot",
+      // Se data.response não existir, pomos uma frase limpa sem mais validações aqui
+      text: data.response ? data.response : "O servidor não enviou uma resposta de texto válida.",
+    },
+  ]);
+} catch {
+  // ... o teu bloco catch mantém-se igual ...
       setChat((prev) => [
         ...prev,
         {
