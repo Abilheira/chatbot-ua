@@ -11,9 +11,12 @@ function EfeitoEscrita({ texto }: { texto: string }) {
   const [textoExibido, setTextoExibido] = useState("");
   
   useEffect(() => {
+    // 🔥 PROTEÇÃO: Se o texto for undefined ou vazio, não faz nada
+    if (!texto) return;
+
     const palavras = texto.split(" ");
     let i = 0;
-    setTextoExibido(""); // Reinicia o texto
+    setTextoExibido(""); 
     
     const timer = setInterval(() => {
       if (i < palavras.length) {
@@ -22,14 +25,14 @@ function EfeitoEscrita({ texto }: { texto: string }) {
       } else {
         clearInterval(timer);
       }
-    }, 45); // Velocidade da escrita (45ms por palavra fica super natural)
+    }, 45); 
     
     return () => clearInterval(timer);
   }, [texto]);
 
-  return <span>{textoExibido}</span>;
+  // Se não houver texto, mostra uma string vazia em vez de undefined
+  return <span>{textoExibido || texto || ""}</span>;
 }
-
 
 
 export default function App() {
