@@ -85,7 +85,7 @@ export default function Home({
 
         {/* BOTÃO COMEÇAR */}
         <button className="start-btn" onClick={onStart}>
-          Começar ➜
+          Falar com o Assistente ➜
         </button>
 
       </div>
