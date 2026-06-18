@@ -14,12 +14,16 @@ function EfeitoEscrita({ texto }: { texto: string }) {
   const [textoExibido, setTextoExibido] = useState("");
   
   useEffect(() => {
+    // Se não for string ou vier vazia, não faz nada
     if (!texto || typeof texto !== "string") {
       setTextoExibido("");
       return;
     }
 
-    const palavras = texto.split(" ");
+    // 🔥 Remove qualquer palavra "undefined" fantasma que venha misturada por erro de string
+    const textoLimpo = texto.replace(/\bundefined\b/g, "").trim();
+
+    const palavras = textoLimpo.split(" ");
     let i = 0;
     setTextoExibido(""); 
     
@@ -35,7 +39,6 @@ function EfeitoEscrita({ texto }: { texto: string }) {
     return () => clearInterval(timer);
   }, [texto]);
 
-  // Sem lógicas de "|| texto", apenas a variável controlada!
   return <span>{textoExibido}</span>;
 }
 
@@ -88,42 +91,42 @@ export default function App() {
   setLoading(true);
 
   try {
-    const response = await fetch(
-      "https://chatbot-ua-wqvd.onrender.com/chat",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ message: userMsg }),
-      }
-    );
-
-    const data = await response.json();
-
-    // VALIDAÇÃO RIGOROSA: Garante que o texto existe, não é nulo e não é "undefined" em formato string
-    let textoFinal = data && data.response ? data.response : "";
-    
-    if (!textoFinal || textoFinal.toString().trim() === "" || textoFinal === "undefined") {
-      textoFinal = "O assistente processou o pedido, mas o servidor gerou uma resposta vazia. Por favor, tenta reformular a tua questão.";
+  const response = await fetch(
+    "https://chatbot-ua-wqvd.onrender.com/chat",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ message: userMsg }),
     }
+  );
 
-    setChat((prev) => [
-      ...prev,
-      {
-        role: "bot",
-        text: textoFinal,
-      },
-    ]);
-  } catch {
-    setChat((prev) => [
-      ...prev,
-      {
-        role: "bot",
-        text: "Erro ao ligar ao servidor. Queres tentar novamente?",
-      },
-    ]);
+  const data = await response.json();
+
+  // Se data.response não existir ou vier a string "undefined", usamos uma frase padrão fixa
+  let respostaDoBot = data && data.response ? data.response.toString().trim() : "";
+  
+  if (!respostaDoBot || respostaDoBot === "undefined" || respostaDoBot === "") {
+    respostaDoBot = "O assistente processou o pedido mas devolveu uma resposta vazia. Tenta reformular a tua questão.";
   }
+
+  setChat((prev) => [
+    ...prev,
+    {
+      role: "bot",
+      text: respostaDoBot,
+    },
+  ]);
+} catch {
+  setChat((prev) => [
+    ...prev,
+    {
+      role: "bot",
+      text: "Erro ao ligar ao servidor. Queres tentar novamente?",
+    },
+  ]);
+}
 
   setLoading(false);
 }
