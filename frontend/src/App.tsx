@@ -24,20 +24,7 @@ export default function App() {
 
   /* 🔥 SCROLL AUTOMÁTICO REFORÇADO */
   useEffect(() => {
-    const container = endRef.current?.parentElement;
-    if (container) {
-      // Executa um scroll imediato e outro ligeiramente atrasado para garantir
-      container.scrollTop = container.scrollHeight;
-      
-      const timer = setTimeout(() => {
-        container.scrollTo({
-          top: container.scrollHeight,
-          behavior: "smooth"
-        });
-      }, 80);
-
-      return () => clearTimeout(timer);
-    }
+    endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chat, loading]);
 
   /* SEND MESSAGE */
@@ -150,8 +137,8 @@ export default function App() {
           </div>
         )}
 
-        {/* Elemento âncora para o scroll */}
-        <div ref={endRef} style={{ float: "left", clear: "both" }} />
+        {/* 🔄 Âncora de scroll limpa e perfeita no final do container */}
+        <div ref={endRef} />
       </div>
 
       {/* INPUT */}
