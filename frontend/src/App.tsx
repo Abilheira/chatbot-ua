@@ -124,11 +124,6 @@ export default function App() {
         </button>
 
         <div className="header-actions">
-          {/* 🔥 NOVO BOTÃO PARA LIMPAR MENSAGENS */}
-          <button onClick={limparChat} className="icon-btn" title="Limpar conversa">
-            🗑️
-          </button>
-
           <button onClick={() => setDarkMode(!darkMode)} className="icon-btn">
             {darkMode ? "☀️" : "🌙"}
           </button>
@@ -180,6 +175,17 @@ export default function App() {
             onKeyDown={(e) => e.key === "Enter" && sendMessage()}
             placeholder="Pergunta alguma coisa..."
           />
+          
+          {/* 🔥 BOTÃO DE LIMPAR INTEGRADO À DIREITA NO INPUT */}
+          <button 
+            onClick={limparChat} 
+            className="icon-btn" 
+            style={{ marginRight: "8px", fontSize: "18px" }}
+            title="Limpar conversa"
+          >
+            🗑️
+          </button>
+
           <button className="botao" onClick={() => sendMessage()}>
             ➜
           </button>
