@@ -7,11 +7,43 @@ type Message = {
   text: string;
 };
 
+/* =====================================================================
+   COMPONENTE: EfeitoEscrita (O Regresso - Super Seguro)
+   ===================================================================== */
+function EfeitoEscrita({ texto }: { texto: string }) {
+  const [textoExibido, setTextoExibido] = useState("");
+  
+  useEffect(() => {
+    // Validação de segurança simples
+    if (!texto || typeof texto !== "string") {
+      setTextoExibido("");
+      return;
+    }
+
+    const palavras = texto.split(" ");
+    let i = 0;
+    setTextoExibido(""); // Reinicia o texto ao mudar de mensagem
+    
+    const timer = setInterval(() => {
+      if (i < palavras.length) {
+        setTextoExibido((prev) => prev + (i === 0 ? "" : " ") + palavras[i]);
+        i++;
+      } else {
+        clearInterval(timer);
+      }
+    }, 45); // Velocidade de escrita fluida (45ms por palavra)
+    
+    return () => clearInterval(timer);
+  }, [texto]);
+
+  return <span>{textoExibido}</span>;
+}
+
+
 export default function App() {
   const [page, setPage] = useState<"home" | "chat">("home");
   const [message, setMessage] = useState("");
 
-  // Estado inicial padrão e limpo
   const [chat, setChat] = useState<Message[]>([
     {
       role: "bot",
@@ -52,7 +84,6 @@ export default function App() {
 
       const data = await response.json();
 
-      // Validação simples contra respostas nulas ou vazias do servidor
       let respostaDoBot = data && data.response ? String(data.response).trim() : "";
       
       if (!respostaDoBot || respostaDoBot.toLowerCase() === "undefined" || respostaDoBot === "") {
@@ -122,9 +153,13 @@ export default function App() {
               <img src="/chatbot2.png" className="logo-bot" />
             )}
 
-            {/* Renderização direta do texto original sem componentes extra */}
             <div className="message-text">
-              {msg.text}
+              {/* 🔥 Se for o bot, aplica o efeito palavra a palavra. Se for o user, mostra direto! */}
+              {msg.role === "bot" ? (
+                <EfeitoEscrita texto={msg.text} />
+              ) : (
+                msg.text
+              )}
             </div>
           </div>
         ))}
