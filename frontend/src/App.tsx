@@ -39,6 +39,15 @@ export default function App() {
     }
   }, [chat]);
 
+  function limparChat() {
+    setChat([
+      {
+        role: "bot",
+        text: "Olá! Tira as tuas dúvidas comigo :)",
+      },
+    ]);
+  }
+
   /* SEND MESSAGE */
   async function sendMessage(customMessage?: string) {
     const userMsg = customMessage && customMessage.trim() ? customMessage : message;
@@ -115,6 +124,11 @@ export default function App() {
         </button>
 
         <div className="header-actions">
+          {/* 🔥 NOVO BOTÃO PARA LIMPAR MENSAGENS */}
+          <button onClick={limparChat} className="icon-btn" title="Limpar conversa">
+            🗑️
+          </button>
+
           <button onClick={() => setDarkMode(!darkMode)} className="icon-btn">
             {darkMode ? "☀️" : "🌙"}
           </button>
