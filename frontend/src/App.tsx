@@ -7,11 +7,13 @@ type Message = {
   text: string;
 };
 
+/* =====================================================================
+   COMPONENTE: EfeitoEscrita (CORRIGIDO SEM UNDEFINED)
+   ===================================================================== */
 function EfeitoEscrita({ texto }: { texto: string }) {
   const [textoExibido, setTextoExibido] = useState("");
   
   useEffect(() => {
-    // 🔥 PROTEÇÃO: Se o texto for undefined ou vazio, não faz nada
     if (!texto) return;
 
     const palavras = texto.split(" ");
@@ -30,39 +32,39 @@ function EfeitoEscrita({ texto }: { texto: string }) {
     return () => clearInterval(timer);
   }, [texto]);
 
-  // Se não houver texto, mostra uma string vazia em vez de undefined
-  return <span>{textoExibido || texto || ""}</span>;
+  // Retorna APENAS o estado controlado. Sem misturas perigosas!
+  return <span>{textoExibido}</span>;
 }
 
 
 export default function App() {
   const [page, setPage] = useState<"home" | "chat">("home");
   const [message, setMessage] = useState("");
+  const [ultimaMensagem, setUltimaMensagem] = useState(""); // 🔥 Para o Retry funcionar
 
   const [chat, setChat] = useState<Message[]>(() => {
-  const guardado = localStorage.getItem("chat_ua_history");
-  return guardado ? JSON.parse(guardado) : [
-    {
-      role: "bot",
-      text: "Olá! Tira as tuas dúvidas comigo :)",
-    },
-  ];
-});
+    const guardado = localStorage.getItem("chat_ua_history");
+    return guardado ? JSON.parse(guardado) : [
+      {
+        role: "bot",
+        text: "Olá! Tira as tuas dúvidas comigo :)",
+      },
+    ];
+  });
 
-useEffect(() => {
-  localStorage.setItem("chat_ua_history", JSON.stringify(chat));
-}, [chat]);
+  useEffect(() => {
+    localStorage.setItem("chat_ua_history", JSON.stringify(chat));
+  }, [chat]);
 
-function limparChat() {
-  const chatInicial: Message[] = [
-    { role: "bot", text: "Olá! Tira as tuas dúvidas comigo :)" }
-  ];
-  setChat(chatInicial);
-  localStorage.setItem("chat_ua_history", JSON.stringify(chatInicial));
-}
+  function limparChat() {
+    const chatInicial: Message[] = [
+      { role: "bot", text: "Olá! Tira as tuas dúvidas comigo :)" }
+    ];
+    setChat(chatInicial);
+    localStorage.setItem("chat_ua_history", JSON.stringify(chatInicial));
+  }
 
   const endRef = useRef<HTMLDivElement | null>(null);
-
   const [darkMode, setDarkMode] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -71,12 +73,13 @@ function limparChat() {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chat]);
 
-  /* SEND <div className="message-text">*/
+  /* SEND MESSAGE */
   async function sendMessage(customMessage?: string) {
     const userMsg = customMessage ?? message;
 
     if (!userMsg.trim()) return;
 
+    setUltimaMensagem(userMsg); // Guarda o input do user
     setChat((prev) => [...prev, { role: "user", text: userMsg }]);
     setMessage("");
     setLoading(true);
@@ -99,7 +102,7 @@ function limparChat() {
         ...prev,
         {
           role: "bot",
-          text: data.response, // mantém \n para CSS tratar
+          text: data.response,
         },
       ]);
     } catch {
@@ -107,7 +110,7 @@ function limparChat() {
         ...prev,
         {
           role: "bot",
-          text: "Erro ao ligar ao servidor.",
+          text: "Erro ao ligar ao servidor. Queres tentar novamente?",
         },
       ]);
     }
@@ -122,7 +125,7 @@ function limparChat() {
         onStart={() => setPage("chat")}
         onSuggestionClick={(text) => {
           setPage("chat");
-          sendMessage(text); // envia logo a pergunta
+          sendMessage(text);
         }}
         darkMode={darkMode}
         setDarkMode={() => setDarkMode(!darkMode)}
@@ -141,49 +144,62 @@ function limparChat() {
         </button>
 
         <div className="header-actions">
-        {/* Botão de Limpar Chat */}
-        <button onClick={limparChat} className="icon-btn" title="Limpar conversa">
-            🧹
-        </button>
-  
-        <button onClick={() => setDarkMode(!darkMode)} className="icon-btn">
+          <button onClick={limparChat} className="icon-btn" title="Limpar conversa">
+            | 🧹
+          </button>
+          <button onClick={() => setDarkMode(!darkMode)} className="icon-btn">
             {darkMode ? "☀️" : "🌙"}
-        </button>
-    </div>
+          </button>
+        </div>
       </div>
 
-      {/* CHAT */}
+      {/* CHAT CONTAINER */}
       <div className="chat-container">
-        {chat.map((msg, i) => (
-          <div
-            key={i}
-            className={msg.role === "user" ? "mensagem-user" : "mensagem-bot"}
-          >
-            {msg.role === "bot" && (
-              <img src="/chatbot2.png" className="logo-bot" />
-            )}
+        {chat.map((msg, i) => {
+          // Garante string válida para o renderizador
+          const textoMensagem = msg && msg.text ? msg.text : "";
 
-            {/* IMPORTANTE: isto preserva quebras de linha */}
-            <div className="message-text">
-              {msg.role === "bot" ? (
-                <EfeitoEscrita texto={msg.text} />
-            ) : (
-              msg.text
-            )}
-          </div>
-          </div>
-        ))}
+          return (
+            <div
+              key={i}
+              className={msg.role === "user" ? "mensagem-user" : "mensagem-bot"}
+            >
+              {msg.role === "bot" && (
+                <img src="/chatbot2.png" className="logo-bot" />
+              )}
+
+              <div className="message-text">
+                {msg.role === "bot" ? (
+                  <>
+                    <EfeitoEscrita texto={textoMensagem} />
+                    {/* Botão de Tentar Novamente caso dê erro no Fetch */}
+                    {textoMensagem.includes("Erro ao ligar ao servidor") && (
+                      <button 
+                        className="btn-tentar-novamente" 
+                        onClick={() => sendMessage(ultimaMensagem)}
+                      >
+                        Tentar novamente 🔄
+                      </button>
+                    )}
+                  </>
+                ) : (
+                  textoMensagem
+                )}
+              </div>
+            </div>
+          );
+        })}
 
         {loading && (
-            <div className="mensagem-bot loading-box">
+          <div className="mensagem-bot loading-box">
             <img src="/chatbot2.png" className="logo-bot" />
             <div className="tic-tac-dots">
-            <span></span>
-            <span></span>
-            <span></span>
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
         <div ref={endRef} />
       </div>
@@ -197,7 +213,6 @@ function limparChat() {
             onKeyDown={(e) => e.key === "Enter" && sendMessage()}
             placeholder="Pergunta alguma coisa..."
           />
-
           <button className="botao" onClick={() => sendMessage()}>
             ➜
           </button>
