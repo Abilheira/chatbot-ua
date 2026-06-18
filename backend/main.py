@@ -46,30 +46,18 @@ if os.path.exists("ua_conhecimento.txt"):
 def chat(req: ChatRequest):
     user_message = req.message
     
-    # Limpa o texto e separa por palavras exatas usando Regex
     words = set(re.findall(r'\b\w+\b', user_message.lower()))
 
-    # 1. TRAVÃO RÍGIDO (Filtro por Palavras EXATAS no Código)
-    # Expandido para aceitar todas as tuas sugestões da Home e temas académicos
     palavras_chave = {
-        # Identificadores da instituição
         "ua", "aveiro", "universidade", "paco", "sasua", "campus",
-        
-        # Inscrições e Cursos
         "curso", "cursos", "matrícula", "matriculas", "matricular", "licenciatura", "mestrado", "estudante",
-        
-        # Calendário e Horários
         "aula", "aulas", "horário", "horarios", "calendário", "calendario", "começam", "comecam",
-        
-        # Propinas e Pagamentos (O que faltava para a tua sugestão!)
         "pagamento", "pagamentos", "prazos", "prazo", "propina", "propinas", "pagar", "valores", "fatura"
     }
     
-    # Se nenhuma palavra exata da pergunta bater com as palavras-chave da UA, bloqueia na hora!
     if not words.intersection(palavras_chave):
-        return {"response": "Lamento, mas sou um assistente exclusivo da Universidade de Aveiro. Não posso responder a assuntos externos como futebol, culinária ou generalidades."}
+        return {"response": "Lamento, mas sou um assistente exclusivo da Universidade de Aveiro. Não posso responder a assuntos externos."}
 
-    # 2. CAPTURAR CONTEXTO RELEVANTE
     contexto_linhas = []
     for linha in UA_KNOWLEDGE:
         linha_low = linha.lower()
@@ -80,7 +68,6 @@ def chat(req: ChatRequest):
     
     contexto = " ".join(contexto_linhas) if contexto_linhas else "Informações gerais sobre a UA."
 
-    # Adicionamos "da Universidade de Aveiro" logo no início da pergunta para contextualizar a IA
     prompt = f"És o assistente oficial da Universidade de Aveiro. Responde estritamente sobre temas da universidade. Pergunta do aluno sobre a UA: {user_message}. Contexto extraído do site: {contexto}"
     
     endpoint = "https://api.iaedu.pt/agent-chat/api/v1/agent/cmamvd3n40000c801qeacoad2/stream"
@@ -99,44 +86,51 @@ def chat(req: ChatRequest):
             return {"response": f"Erro na API da IAedu (Código {response.status_code})."}
 
         raw_text = response.text
+        
+        # 🚨 DIAGNÓSTICO: Isto vai aparecer nos logs do teu Render!
+        print("--- RESPOSTA BRUTA DA API IAEDU ---")
+        print(raw_text)
+        print("----------------------------------")
+
         reply = ""
         
-        # 1. Tenta o parser estruturado por tokens
+        # Super Parser: Se contiver texto puro, usa-o. Se for JSON-Stream, extrai.
         for line in raw_text.split("\n"):
             line = line.strip()
             if not line:
                 continue
                 
-            try:
-                if line.startswith("data:"):
-                    line = line.replace("data:", "").strip()
-                    
-                data_json = json.loads(line)
+            # Remove prefixos de stream comuns se existirem
+            if line.startswith("data:"):
+                line = line.replace("data:", "").strip()
                 
+            try:
+                # Se for JSON estruturado da IAedu
+                data_json = json.loads(line)
                 if data_json.get("type") == "token":
                     reply += data_json.get("content", "")
                 elif data_json.get("type") == "message":
                     content = data_json.get("content", {})
-                    if isinstance(content, dict):
-                        reply = content.get("content", reply)
-                    else:
-                        reply = content
-            except:
-                continue
+                    reply = content.get("content", reply) if isinstance(content, dict) else content
+            except json.JSONDecodeError:
+                # Se NÃO for JSON e for apenas texto corrido na linha, acumula directamente
+                if not line.startswith("{") and not line.startswith("["):
+                    reply += line + "\n"
 
-        # 🔄 RECURSO DE SUCESSO: Se o parser falhou mas veio texto no raw_text, não o deites fora!
-        if not reply.strip() and len(raw_text) > 10:
-            # Procura qualquer padrão de texto legível dentro do bloco de resposta por Regex
+        # Se o parser linha-a-linha falhou mas temos texto bruto acumulado no raw_text
+        if not reply.strip() and len(raw_text) > 5:
+            # Tenta apanhar qualquer bloco de texto dentro de "content" via regex simples
             encontrados = re.findall(r'"content":\s*"([^"]+)"', raw_text)
             if encontrados:
-                # Junta os fragmentos encontrados para não devolver vazio
                 reply = "".join(encontrados).replace("\\n", "\n")
+            else:
+                # Em último recurso, assume o texto bruto limpo de lixo JSON
+                reply = raw_text
 
-        # Se mesmo assim estiver vazio, devolve uma resposta padrão que não bloqueia
         if not reply.strip():
-            reply = "Não consegui aceder aos dados da universidade neste momento. Podes tentar reformular a pergunta?"
+            return {"response": "A API processou o pedido mas devolveu uma resposta vazia. Tenta reformular a tua questão."}
 
-        return {"response": reply}
+        return {"response": reply.strip()}
 
     except Exception as e:
         return {"response": f"Erro ao comunicar com o servidor: {str(e)}"}
